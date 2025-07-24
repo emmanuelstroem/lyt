@@ -253,6 +253,70 @@ private var backgroundColor: Color {
 
 ---
 
+### Apple Music-Style Design System ✅ IMPLEMENTED
+
+**Overview**: Complete UI/UX redesign to match Apple Music's modern, polished look and feel
+
+**Key Design Elements**:
+- **Hero Section**: Large album art with gradient backgrounds and prominent typography
+- **Card-Based Layout**: Modern cards with shadows, rounded corners, and proper spacing  
+- **Grid Interface**: Channel selection in 2-column grid layout (like album browsing)
+- **Now Playing Bar**: Persistent bottom player bar with mini album art and controls
+- **Visual Hierarchy**: Bold titles, weighted fonts, and proper information hierarchy
+- **Blur Effects**: Ultra-thin material backgrounds for modern iOS/macOS aesthetic
+
+**Major UI Components**:
+
+1. **NowPlayingHeroView**: Apple Music-style hero section
+   - Large 120x120 album art with channel color gradients
+   - Live indicator with animated red dot
+   - Prominent program title and description
+   - Series information with channel color accent
+
+2. **ChannelGridView**: Album-style channel browser
+   - 2-column responsive grid layout
+   - Gradient "album art" for each channel
+   - Hover/selection animations with scale effects
+   - Category badges and channel information
+
+3. **NowPlayingBar**: Persistent bottom player
+   - Mini album art (50x50) with gradient
+   - Program title and channel name
+   - Play/pause button (ready for Phase 1 audio implementation)
+   - Ultra-thin material background with blur
+
+4. **StreamDetailsView**: Technical information display
+   - Quality indicators (HLS vs ICY)
+   - Bitrate information and live status
+   - Clean dividers and proper spacing
+
+**Typography System**:
+- **Headlines**: `.title2.weight(.bold)` for main titles
+- **Subheadings**: `.title3.weight(.semibold)` for section headers  
+- **Body**: `.subheadline.weight(.medium)` for primary content
+- **Captions**: `.caption.weight(.bold)` for badges and labels
+
+**Visual Polish**:
+- **Shadows**: Subtle `.black.opacity(0.08)` with 8pt radius
+- **Gradients**: Channel-specific color gradients for visual identity
+- **Animations**: Scale effects on selection (1.02x scale)
+- **Spacing**: 20pt horizontal padding, 16-20pt vertical spacing
+- **Corner Radius**: 12-16pt for cards, 6-8pt for smaller elements
+
+**Platform Adaptations**:
+- **iOS**: Large navigation titles, full gesture support
+- **macOS**: Automatic navigation style, proper window integration
+- **Cross-Platform**: Consistent look while respecting platform conventions
+
+**Benefits**:
+- ✅ Professional, modern appearance matching Apple's design language
+- ✅ Intuitive user experience familiar to Apple Music users
+- ✅ Improved visual hierarchy and content discoverability
+- ✅ Ready for Phase 1 audio controls integration
+- ✅ Scalable design system for future features
+
+---
+
 ## Version
 
 - AGENT.md v1.0  
