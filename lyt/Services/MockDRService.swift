@@ -64,6 +64,97 @@ class MockDRService {
                 durationMinutes: 180
             ),
             
+            // P4 Syd - Regional
+            createMockLiveProgram(
+                learnId: "urn:dr:ocs:audio:content:playable:14422583305",
+                title: "P4 Syd Eftermiddag",
+                description: "Lokale nyheder og musik fra Sønderjylland.",
+                channelSlug: "p4syd",
+                channelTitle: "P4 Syd",
+                seriesTitle: "P4 Syd Eftermiddag",
+                categories: ["Nyheder", "Lokalt"],
+                startTime: calendar.date(byAdding: .minute, value: -40, to: now)!,
+                durationMinutes: 120
+            ),
+            
+            // P4 Nord - Regional
+            createMockLiveProgram(
+                learnId: "urn:dr:ocs:audio:content:playable:14422583306",
+                title: "P4 Nord Direkte",
+                description: "Nyheder og historier fra Nordjylland og Himmerland.",
+                channelSlug: "p4nord",
+                channelTitle: "P4 Nord",
+                seriesTitle: "P4 Nord Direkte",
+                categories: ["Nyheder", "Lokalt"],
+                startTime: calendar.date(byAdding: .minute, value: -25, to: now)!,
+                durationMinutes: 150
+            ),
+            
+            // P4 Fyn - Regional
+            createMockLiveProgram(
+                learnId: "urn:dr:ocs:audio:content:playable:14422583307",
+                title: "P4 Fyn Live",
+                description: "Det bedste fra Fyn og øerne - musik og lokale nyheder.",
+                channelSlug: "p4fyn",
+                channelTitle: "P4 Fyn",
+                seriesTitle: "P4 Fyn Live",
+                categories: ["Musik", "Lokalt"],
+                startTime: calendar.date(byAdding: .minute, value: -10, to: now)!,
+                durationMinutes: 120
+            ),
+            
+            // P5 København - Regional Classical
+            createMockLiveProgram(
+                learnId: "urn:dr:ocs:audio:content:playable:15422583304",
+                title: "P5 Klassisk København",
+                description: "Klassisk musik døgnet rundt med fokus på koncerter fra København.",
+                channelSlug: "p5kbh",
+                channelTitle: "P5 København",
+                seriesTitle: "P5 Klassisk København",
+                categories: ["Musik", "Klassisk"],
+                startTime: calendar.date(byAdding: .minute, value: -20, to: now)!,
+                durationMinutes: 180
+            ),
+            
+            // P5 Syd - Regional Classical
+            createMockLiveProgram(
+                learnId: "urn:dr:ocs:audio:content:playable:15422583305",
+                title: "P5 Klassisk Syd",
+                description: "Klassisk musik med focus på musiklivet i Sønderjylland.",
+                channelSlug: "p5syd",
+                channelTitle: "P5 Syd",
+                seriesTitle: "P5 Klassisk Syd",
+                categories: ["Musik", "Klassisk"],
+                startTime: calendar.date(byAdding: .minute, value: -25, to: now)!,
+                durationMinutes: 150
+            ),
+            
+            // P5 Nord - Regional Classical
+            createMockLiveProgram(
+                learnId: "urn:dr:ocs:audio:content:playable:15422583306",
+                title: "P5 Klassisk Nord",
+                description: "Klassisk musik fra Nordjylland og Himmerland.",
+                channelSlug: "p5nord",
+                channelTitle: "P5 Nord",
+                seriesTitle: "P5 Klassisk Nord",
+                categories: ["Musik", "Klassisk"],
+                startTime: calendar.date(byAdding: .minute, value: -30, to: now)!,
+                durationMinutes: 120
+            ),
+            
+            // P5 Fyn - Regional Classical
+            createMockLiveProgram(
+                learnId: "urn:dr:ocs:audio:content:playable:15422583307",
+                title: "P5 Klassisk Fyn",
+                description: "Klassisk musik fra Fyn og øerne.",
+                channelSlug: "p5fyn",
+                channelTitle: "P5 Fyn",
+                seriesTitle: "P5 Klassisk Fyn",
+                categories: ["Musik", "Klassisk"],
+                startTime: calendar.date(byAdding: .minute, value: -15, to: now)!,
+                durationMinutes: 180
+            ),
+            
             // P6 Beat - Rock
             createMockLiveProgram(
                 learnId: "urn:dr:ocs:audio:content:playable:16452511304",
@@ -75,6 +166,19 @@ class MockDRService {
                 categories: ["Musik"],
                 startTime: calendar.date(byAdding: .minute, value: -60, to: now)!,
                 durationMinutes: 120
+            ),
+            
+            // P7 - Adult Contemporary
+            createMockLiveProgram(
+                learnId: "urn:dr:ocs:audio:content:playable:17452583304",
+                title: "P7 Mix",
+                description: "Den perfekte blanding af velkendte hits og nye favoritter til voksne lyttere.",
+                channelSlug: "p7",
+                channelTitle: "P7",
+                seriesTitle: "P7 Mix",
+                categories: ["Musik"],
+                startTime: calendar.date(byAdding: .minute, value: -35, to: now)!,
+                durationMinutes: 240
             ),
             
             // P8 Jazz
@@ -170,8 +274,15 @@ class MockDRService {
         case "p2": icyCode = "A04"
         case "p3": icyCode = "A05"
         case "p4kbh": icyCode = "A08"
-        case "p5": icyCode = "A21"
+        case "p4syd": icyCode = "A09"
+        case "p4nord": icyCode = "A10"
+        case "p4fyn": icyCode = "A11"
+        case "p5kbh": icyCode = "A21"
+        case "p5syd": icyCode = "A23"
+        case "p5nord": icyCode = "A24"
+        case "p5fyn": icyCode = "A26"
         case "p6beat": icyCode = "A29"
+        case "p7": icyCode = "A25"
         case "p8jazz": icyCode = "A22"
         default: icyCode = "A03"
         }
@@ -314,6 +425,15 @@ extension MockDRService {
         var validationErrors: [String] = []
         
         let livePrograms = mockLivePrograms()
+        let channelSlugs = livePrograms.map { $0.channel.slug }
+        
+        // Check for missing expected channels
+        let expectedChannels = ["p1", "p2", "p3", "p4kbh", "p4syd", "p4nord", "p4fyn", "p5kbh", "p5syd", "p5nord", "p5fyn", "p6beat", "p7", "p8jazz"]
+        for expectedChannel in expectedChannels {
+            if !channelSlugs.contains(expectedChannel) {
+                validationErrors.append("Missing expected channel: \(expectedChannel)")
+            }
+        }
         
         // Validate live programs
         for program in livePrograms {
@@ -345,6 +465,17 @@ extension MockDRService {
             // Validate channel color
             if !isValidHexColor(program.channel.color) {
                 validationErrors.append("Channel \(program.channel.slug) has invalid color: \(program.channel.color)")
+            }
+        }
+        
+        print("📻 Mock Data Validation Results:")
+        print("   Channels found: \(channelSlugs.sorted())")
+        if validationErrors.isEmpty {
+            print("   ✅ All validation checks passed")
+        } else {
+            print("   ❌ Found \(validationErrors.count) validation errors")
+            for error in validationErrors {
+                print("   - \(error)")
             }
         }
         

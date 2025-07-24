@@ -227,6 +227,10 @@ class DRServiceManager: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     
+    // CRITICAL FIX: Move key UI properties to top level for proper SwiftUI observation
+    @Published var currentLiveProgram: DRLiveProgram?
+    @Published var selectedChannel: DRChannel?
+    
     private let service: DRServiceProtocol
     
     init(service: DRServiceProtocol? = nil) {
@@ -238,17 +242,22 @@ class DRServiceManager: ObservableObject {
     
     func loadChannels() {
         appState.availableChannels = service.getChannels()
-        if appState.selectedChannel == nil, let firstChannel = appState.availableChannels.first {
-            appState.selectedChannel = firstChannel
+        if selectedChannel == nil, let firstChannel = appState.availableChannels.first {
+            selectedChannel = firstChannel
         }
     }
     
     func refreshNowPlaying() async {
+        print("🔄 DRServiceManager: refreshNowPlaying() called")
+        print("   - Current selected channel: \(selectedChannel?.slug ?? "nil")")
+        
         isLoading = true
         errorMessage = nil
         
         do {
             let livePrograms = try await service.fetchNowPlaying()
+            print("   - Fetched \(livePrograms.count) live programs")
+            print("   - Fetched channel slugs: \(livePrograms.map { $0.channel.slug })")
             
             // Update app state with fresh data
             appState.allLivePrograms = livePrograms
@@ -258,40 +267,77 @@ class DRServiceManager: ObservableObject {
             let uniqueChannels = Array(Set(channels))
             appState.availableChannels = uniqueChannels
             
-            // Update current live program for selected channel
-            if let selectedChannel = appState.selectedChannel {
-                appState.currentLiveProgram = livePrograms.first { liveProgram in
-                    liveProgram.channel.id == selectedChannel.id || liveProgram.channel.slug == selectedChannel.slug
+            // CRITICAL FIX: Update current live program for selected channel
+            if let selectedCh = selectedChannel {
+                print("   - Looking for program for selected channel: \(selectedCh.slug)")
+                let foundProgram = livePrograms.first { liveProgram in
+                    liveProgram.channel.id == selectedCh.id || liveProgram.channel.slug == selectedCh.slug
                 }
+                
+                if let program = foundProgram {
+                    print("   - ✅ Found program after refresh: \(program.title) for \(program.channel.slug)")
+                    currentLiveProgram = program
+                } else {
+                    print("   - ❌ Still no program found for \(selectedCh.slug) after refresh")
+                    print("   - Available slugs after refresh: \(livePrograms.map { $0.channel.slug })")
+                    // Keep currentLiveProgram as nil to show proper "no data" state
+                    currentLiveProgram = nil
+                }
+            } else {
+                print("   - No selected channel to update")
             }
             
         } catch {
+            print("   - ❌ Error in refreshNowPlaying: \(error)")
             errorMessage = error.localizedDescription
             appState.lastError = error.localizedDescription
             print("Error refreshing now playing: \(error)")
         }
         
         isLoading = false
+        print("   - refreshNowPlaying completed, isLoading = false")
+        print("   - Final currentLiveProgram: \(currentLiveProgram?.title ?? "nil")")
     }
     
     func selectChannel(_ channel: DRChannel) {
-        appState.selectedChannel = channel
+        print("🔄 DRServiceManager: selectChannel(\(channel.title)) slug: \(channel.slug)")
+        print("   - Previous selected: \(selectedChannel?.title ?? "nil")")
+        print("   - Total cached programs: \(appState.allLivePrograms.count)")
+        print("   - Cached channel slugs: \(appState.allLivePrograms.map { $0.channel.slug })")
         
-        // Update current live program for the selected channel
-        appState.currentLiveProgram = appState.allLivePrograms.first { liveProgram in
+        // CRITICAL FIX: Always update selected channel first
+        selectedChannel = channel
+        
+        // CRITICAL FIX: Clear current program immediately to prevent stale data
+        currentLiveProgram = nil
+        
+        // Try to find the live program for the selected channel
+        let foundProgram = appState.allLivePrograms.first { liveProgram in
             liveProgram.channel.id == channel.id || liveProgram.channel.slug == channel.slug
         }
         
-        // If we don't have live program data, refresh
-        if appState.currentLiveProgram == nil {
+        if let program = foundProgram {
+            print("   - ✅ Found cached program: \(program.title) for \(program.channel.slug)")
+            currentLiveProgram = program
+        } else {
+            print("   - ❌ No cached program found for \(channel.slug)")
+            print("   - Available slugs: \(appState.allLivePrograms.map { $0.channel.slug })")
+            
+            // CRITICAL FIX: Set loading state and trigger immediate refresh
+            isLoading = true
+            errorMessage = nil
+            
+            print("   - 🔄 Setting loading state and triggering immediate refresh")
             Task {
                 await refreshNowPlaying()
             }
         }
+        
+        print("   - Final currentLiveProgram: \(currentLiveProgram?.title ?? "nil")")
     }
     
     func getCurrentProgram() -> DRProgram? {
-        guard let liveProgram = appState.currentLiveProgram else { return nil }
+        guard let liveProgram = currentLiveProgram else { return nil }
         
         return DRProgram(
             id: liveProgram.id,
@@ -318,10 +364,10 @@ class DRServiceManager: ObservableObject {
     }
     
     func getCurrentLiveProgram() -> DRLiveProgram? {
-        return appState.currentLiveProgram
+        return currentLiveProgram
     }
     
     func getStreamURL() -> String? {
-        return appState.currentLiveProgram?.streamURL
+        return currentLiveProgram?.streamURL
     }
 } 
