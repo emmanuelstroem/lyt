@@ -15,6 +15,10 @@ I am using Xcode-beta to build the code because my system is running on MacOS Ta
 Agent must NOT make changes to `*.xcodeproj` files. Instead, let me know what changes to make. Since these changes easily break the build. 
 Agent must NOT make changes to this file. Instead, use the README.md or create an ISSUES.md, etc
 
+Agent MUST maintain a list of issues and solutions in ISSUES.md file
+
+Agent MUST follow Apple's [human interface guidelines ](https://developer.apple.com/design/human-interface-guidelines/action-sheets)
+
 Note:
 
 - There are different color specifications for iOS, macOS and tvOS. Here is the comprehensive list: https://mar.codes/apple-colors
@@ -33,6 +37,7 @@ The agent may assist with:
 - Efficiently handle audio playback, handoff to airplay or bluetooth, and graceful handover to other applications like phone, music, spotify, alarm, etc
 - Handle gracefully termination when the application is quite 
 - Ability to resume playback when Audio interface is freed up again 
+- Execute Makefile checks after every change to ensure that the code is still building successfully
 - Optional: Generating audio program summaries or recommendations
 
 ---

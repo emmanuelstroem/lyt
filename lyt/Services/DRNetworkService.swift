@@ -229,7 +229,11 @@ class DRServiceManager: ObservableObject {
     
     // CRITICAL FIX: Move key UI properties to top level for proper SwiftUI observation
     @Published var currentLiveProgram: DRLiveProgram?
-    @Published var selectedChannel: DRChannel?
+    @Published var selectedChannel: DRChannel? // Channel currently being viewed
+    @Published var playingChannel: DRChannel? // Channel currently playing audio
+    
+    // MARK: - Audio Playback
+    @Published var audioPlayer = AudioPlayerService()
     
     private let service: DRServiceProtocol
     
@@ -369,5 +373,155 @@ class DRServiceManager: ObservableObject {
     
     func getStreamURL() -> String? {
         return currentLiveProgram?.streamURL
+    }
+    
+    // MARK: - Audio Playback Methods
+    
+    /// Start playing a specific channel
+    func startPlayback(for channel: DRChannel) {
+        print("🎵 DRServiceManager: Starting playback for \(channel.title)")
+        
+        // Stop current playback if different channel
+        if let currentPlaying = playingChannel, currentPlaying.id != channel.id {
+            print("🔄 Switching from \(currentPlaying.title) to \(channel.title)")
+            audioPlayer.stop()
+        }
+        
+        // Set playing channel
+        playingChannel = channel
+        
+        // Get stream URL for this specific channel
+        guard let streamURL = getStreamURL(for: channel) else {
+            print("❌ No stream URL available for \(channel.title)")
+            errorMessage = "No stream available for this channel"
+            playingChannel = nil
+            return
+        }
+        
+        print("   - Stream URL: \(streamURL)")
+        
+        // Update current live program for playing channel
+        updateCurrentProgramForPlayingChannel()
+        
+        audioPlayer.play(url: streamURL)
+        
+        // Update legacy app state for compatibility
+        appState.playbackState = audioPlayer.playbackState
+    }
+    
+    /// Start playing the currently selected channel
+    func startPlayback() {
+        guard let channel = selectedChannel else {
+            print("❌ No channel selected for playback")
+            errorMessage = "No channel selected"
+            return
+        }
+        startPlayback(for: channel)
+    }
+    
+    /// Stop playback
+    func stopPlayback() {
+        print("⏹️ DRServiceManager: Stopping playback")
+        audioPlayer.stop()
+        playingChannel = nil
+        appState.playbackState = .stopped
+    }
+    
+    /// Toggle play/pause for a specific channel
+    func togglePlayback(for channel: DRChannel) {
+        if let currentPlaying = playingChannel, currentPlaying.id == channel.id {
+            // Same channel - toggle play/pause
+            switch audioPlayer.playbackState {
+            case .playing:
+                print("⏸️ DRServiceManager: Pausing \(channel.title)")
+                audioPlayer.pause()
+            case .paused:
+                print("▶️ DRServiceManager: Resuming \(channel.title)")
+                audioPlayer.resume()
+            case .stopped, .error:
+                print("▶️ DRServiceManager: Restarting \(channel.title)")
+                startPlayback(for: channel)
+            case .loading:
+                // Don't interrupt loading
+                break
+            }
+        } else {
+            // Different channel - start playing this one
+            startPlayback(for: channel)
+        }
+        
+        // Update legacy app state
+        appState.playbackState = audioPlayer.playbackState
+    }
+    
+    /// Toggle play/pause for currently selected channel
+    func togglePlayback() {
+        guard let channel = selectedChannel else {
+            print("❌ No channel selected for playback")
+            return
+        }
+        togglePlayback(for: channel)
+    }
+    
+    /// Check if a specific channel is currently playing
+    func isPlaying(channel: DRChannel) -> Bool {
+        guard let playingCh = playingChannel else { return false }
+        return playingCh.id == channel.id && audioPlayer.isPlaying
+    }
+    
+    /// Check if currently playing the selected channel
+    func isPlayingCurrentChannel() -> Bool {
+        guard let streamURL = getStreamURL() else { return false }
+        return audioPlayer.currentURL == streamURL && audioPlayer.isPlaying
+    }
+    
+    /// Get playback state for a specific channel
+    func getPlaybackState(for channel: DRChannel) -> PlaybackState {
+        guard let playingCh = playingChannel, playingCh.id == channel.id else {
+            return .stopped
+        }
+        return audioPlayer.playbackState
+    }
+    
+    /// Get current playback state
+    var playbackState: PlaybackState {
+        return audioPlayer.playbackState
+    }
+    
+    /// Set volume (0.0 to 1.0)
+    func setVolume(_ volume: Double) {
+        audioPlayer.setVolume(volume)
+        appState.volume = volume
+    }
+    
+    /// Toggle mute
+    func toggleMute() {
+        audioPlayer.toggleMute()
+        appState.isMuted = audioPlayer.isMuted
+    }
+    
+    // MARK: - Helper Methods
+    
+    /// Get stream URL for a specific channel
+    private func getStreamURL(for channel: DRChannel) -> String? {
+        let foundProgram = appState.allLivePrograms.first { liveProgram in
+            liveProgram.channel.id == channel.id || liveProgram.channel.slug == channel.slug
+        }
+        return foundProgram?.streamURL
+    }
+    
+    /// Update current live program based on playing channel
+    private func updateCurrentProgramForPlayingChannel() {
+        guard let playingCh = playingChannel else {
+            currentLiveProgram = nil
+            return
+        }
+        
+        let foundProgram = appState.allLivePrograms.first { liveProgram in
+            liveProgram.channel.id == playingCh.id || liveProgram.channel.slug == playingCh.slug
+        }
+        
+        currentLiveProgram = foundProgram
+        print("🎵 Updated current live program for playing channel: \(foundProgram?.channel.title ?? "nil")")
     }
 } 

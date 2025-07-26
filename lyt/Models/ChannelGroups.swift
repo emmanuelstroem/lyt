@@ -2,6 +2,22 @@ import Foundation
 import SwiftUI
 import Combine
 
+// MARK: - Radio Station Provider Models
+
+/// Represents a radio station provider (e.g., DR, potentially others in the future)
+struct RadioStationProvider: Identifiable, Hashable {
+    let id: String
+    let name: String
+    let description: String
+    let color: String
+    let logoSystemName: String
+    let channelGroups: [ChannelGroup]
+    
+    var swiftUIColor: Color {
+        Color(hex: color) ?? .accentColor
+    }
+}
+
 // MARK: - Channel Group Models
 
 /// Represents a group of channels (e.g., P4 with different regions)
@@ -96,6 +112,27 @@ class ChannelOrganizer {
         let finalGroups = groups.sorted { $0.name < $1.name }
         print("   - Final groups: \(finalGroups.map { "\($0.name) (regional: \($0.isRegional))" })")
         return finalGroups
+    }
+    
+    static func organizeProviders(_ channels: [DRChannel]) -> [RadioStationProvider] {
+        print("🏢 ChannelOrganizer: organizeProviders() called")
+        print("   - Input channels: \(channels.map { $0.slug })")
+        
+        // For now, all channels belong to DR (Danmarks Radio)
+        // In the future, we can add other providers here
+        let drChannelGroups = organizeChannels(channels)
+        
+        let drProvider = RadioStationProvider(
+            id: "dr",
+            name: "DR",
+            description: "Danmarks Radio - Public service broadcasting",
+            color: "E60026", // DR Red
+            logoSystemName: "antenna.radiowaves.left.and.right",
+            channelGroups: drChannelGroups
+        )
+        
+        print("   - Created DR provider with \(drChannelGroups.count) channel groups")
+        return [drProvider]
     }
     
     static func getRegionsForP4(_ channels: [DRChannel]) -> [ChannelRegion] {
@@ -254,7 +291,7 @@ class ChannelNavigationState: ObservableObject {
         
         switch currentLevel {
         case .channelGroups:
-            print("   - Already at root, no action")
+            print("   - Already at root channel groups, no action")
             break // Already at root
         case .regions(_):
             print("   - From regions -> channelGroups")

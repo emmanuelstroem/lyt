@@ -296,12 +296,30 @@ struct DRNowPlaying: Identifiable, Codable {
 // MARK: - App State Models
 
 /// Playback state for the audio player
-enum PlaybackState {
+enum PlaybackState: Equatable {
     case stopped
     case loading
     case playing
     case paused
     case error(String)
+    
+    // MARK: - Equatable conformance
+    static func == (lhs: PlaybackState, rhs: PlaybackState) -> Bool {
+        switch (lhs, rhs) {
+        case (.stopped, .stopped):
+            return true
+        case (.loading, .loading):
+            return true
+        case (.playing, .playing):
+            return true
+        case (.paused, .paused):
+            return true
+        case (.error(let lhsMessage), .error(let rhsMessage)):
+            return lhsMessage == rhsMessage
+        default:
+            return false
+        }
+    }
 }
 
 /// Current app state for radio playback
