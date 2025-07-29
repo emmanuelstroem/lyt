@@ -176,9 +176,9 @@ struct FloatingMiniPlayerContent: View {
                 if let track = serviceManager.currentTrack {
                     if track.isCurrentlyPlaying {
                         // Show channel-program as heading and track as subheading
-                        let programTitle = serviceManager.getCurrentProgram(for: playingChannel)?.cleanTitle() ?? "Live"
+                        let programTitle = serviceManager.getCurrentProgram(for: playingChannel)
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("\(playingChannel.title) - \(programTitle)")
+                            Text("\(playingChannel.title) - \(programTitle?.cleanTitle() ?? "")")
                                 .font(.caption)
                                 .fontWeight(.medium)
                                 .foregroundColor(.white)

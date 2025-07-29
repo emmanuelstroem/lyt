@@ -196,7 +196,8 @@ struct DREpisode: Identifiable, Codable, Equatable {
     /// Returns the program title with channel name removed to avoid duplication
     /// This is useful when displaying program titles alongside channel names
     func cleanTitle() -> String {
-        return title.replacingOccurrences(of: channel.title, with: "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let title = title.replacingOccurrences(of: channel.slug.uppercased(), with: "").trimmingCharacters(in: .whitespacesAndNewlines)
+        return title
     }
     
     var squareImageURL: String? {
@@ -547,12 +548,16 @@ class DRServiceManager: ObservableObject {
                 audioPlayer.pause()
                 // Stop track polling when paused
                 stopTrackPolling()
+                // Update command center playback state
+                audioPlayer.updateCommandCenterPlaybackState()
             } else {
                 audioPlayer.resume()
                 // Restart track polling when resumed
                 Task {
                     await getCurrentTrack(for: channel)
                 }
+                // Update command center playback state
+                audioPlayer.updateCommandCenterPlaybackState()
             }
         } else {
             playChannel(channel)
@@ -565,6 +570,10 @@ class DRServiceManager: ObservableObject {
         currentTrack = nil
         currentLiveProgram = nil
         stopTrackPolling()
+        stopProgramRefreshTimer()
+        
+        // Clear command center info
+        audioPlayer.clearCommandCenterInfo()
         
         // Notify observers that playback has stopped
         objectWillChange.send()
@@ -583,12 +592,20 @@ class DRServiceManager: ObservableObject {
         Task { @MainActor in
             self.currentLiveProgram = currentProgram
             self.currentTrack = nil
+            
+            // Update Command Center with new program information
+            if let playingChannel = self.playingChannel {
+                self.audioPlayer.updateCommandCenterInfo(channel: playingChannel, program: currentProgram, track: self.currentTrack)
+            }
         }
         
         // Start track polling for this channel
         Task {
             await self.getCurrentTrack(for: channel)
         }
+        
+        // Start program refresh timer (check every 5 minutes)
+        startProgramRefreshTimer()
         
         // Try to get stream URL from current program first
         var streamURL: String? = currentProgram?.streamURL
@@ -613,7 +630,7 @@ class DRServiceManager: ObservableObject {
                 
                 // Update Command Center with channel and program info
                 let currentProgram = self.getCurrentProgram(for: channel)
-                self.audioPlayer.updateCommandCenterInfo(channel: channel, program: currentProgram)
+                self.audioPlayer.updateCommandCenterInfo(channel: channel, program: currentProgram, track: self.currentTrack)
             }
         } else {
             Task { @MainActor in
@@ -636,10 +653,25 @@ class DRServiceManager: ObservableObject {
             await MainActor.run {
                 self.currentTrack = currentTrack
                 self.scheduleNextLivePoll(for: channel, track: currentTrack)
+                
+                // Update Command Center with new track information
+                let currentProgram = self.getCurrentProgram(for: channel)
+                self.audioPlayer.updateCommandCenterInfo(channel: channel, program: currentProgram, track: currentTrack)
             }
             
             return currentTrack
         } catch {
+            // Handle HTTP errors by scheduling next poll at current time + trackPollingInterval
+            await MainActor.run {
+                let now = Date()
+                let nextPollTime = now.addingTimeInterval(DRAPIConfig.trackPollingInterval)
+                self.nextLivePollingTime = nextPollTime
+                
+                print("🎵 Polling: HTTP Error occurred, scheduling next poll in \(Int(DRAPIConfig.trackPollingInterval))s")
+                
+                self.schedulePoll(at: nextPollTime, for: channel)
+            }
+            
             return nil
         }
     }
@@ -651,10 +683,45 @@ class DRServiceManager: ObservableObject {
         nextLivePollingTime = nil
     }
     
+    private var programRefreshTimer: Timer?
+    
+    private func startProgramRefreshTimer() {
+        // Stop existing timer if any
+        stopProgramRefreshTimer()
+        
+        // Create a timer that fires every 5 minutes
+        programRefreshTimer = Timer.scheduledTimer(withTimeInterval: 5 * 60, repeats: true) { [weak self] _ in
+            self?.refreshCurrentProgram()
+        }
+    }
+    
+    private func stopProgramRefreshTimer() {
+        programRefreshTimer?.invalidate()
+        programRefreshTimer = nil
+    }
+    
 
     
     func clearPlaybackError() {
         playbackError = nil
+    }
+    
+    // MARK: - Program Refresh
+    
+    func refreshCurrentProgram() {
+        guard let playingChannel = playingChannel else { return }
+        
+        let newProgram = getCurrentProgram(for: playingChannel)
+        
+        // Only update if the program has changed
+        if newProgram?.id != currentLiveProgram?.id {
+            Task { @MainActor in
+                self.currentLiveProgram = newProgram
+                
+                // Update Command Center with new program information
+                self.audioPlayer.updateCommandCenterInfo(channel: playingChannel, program: newProgram, track: self.currentTrack)
+            }
+        }
     }
     
     // MARK: - New Live Polling System

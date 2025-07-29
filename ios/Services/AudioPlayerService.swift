@@ -164,13 +164,26 @@ class AudioPlayerService: NSObject, ObservableObject {
     
     // MARK: - Command Center Info Updates
     
-    func updateCommandCenterInfo(channel: DRChannel, program: DREpisode?) {
+    func updateCommandCenterInfo(channel: DRChannel, program: DREpisode?, track: DRTrack? = nil) {
         var nowPlayingInfo: [String: Any] = [:]
         
-        // Basic info
-        nowPlayingInfo[MPMediaItemPropertyTitle] = program?.title ?? channel.title
-        nowPlayingInfo[MPMediaItemPropertyArtist] = channel.title
-        nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = "DR Radio"
+        // Determine what to show as title and artist based on available information
+        if let track = track, track.isCurrentlyPlaying {
+            // Show track info when track is currently playing
+            nowPlayingInfo[MPMediaItemPropertyTitle] = "\(channel.title) - \(program?.cleanTitle() ?? "")"
+            nowPlayingInfo[MPMediaItemPropertyArtist] = track.displayText
+            nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = program?.cleanTitle() ?? "DR Radio"
+        } else if let program = program {
+            // Show program info when no track is playing
+            nowPlayingInfo[MPMediaItemPropertyTitle] = channel.title
+            nowPlayingInfo[MPMediaItemPropertyArtist] = program.cleanTitle()
+            nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = "DR Radio"
+        } else {
+            // Fallback to channel info
+            nowPlayingInfo[MPMediaItemPropertyTitle] = channel.title
+            nowPlayingInfo[MPMediaItemPropertyArtist] = "DR Radio"
+            nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = "Live"
+        }
         
         // Set duration to 0 for live radio (no progress bar)
         nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = 0.0
@@ -255,6 +268,11 @@ class AudioPlayerService: NSObject, ObservableObject {
     
     func clearCommandCenterInfo() {
         nowPlayingInfoCenter?.nowPlayingInfo = nil
+    }
+    
+    // Convenience method to update command center with current track info
+    func updateCommandCenterWithTrack(channel: DRChannel, program: DREpisode?, track: DRTrack?) {
+        updateCommandCenterInfo(channel: channel, program: program, track: track)
     }
     
 
