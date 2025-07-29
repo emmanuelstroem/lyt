@@ -110,21 +110,21 @@ struct ChannelDetailsSheet: View {
                         // Channel Info Section
                         VStack(alignment: .leading, spacing: 16) {
                             HStack {
-                                VStack(alignment: .leading, spacing: 4) {
+                                VStack(alignment: .leading, spacing: 8) {
                                     Text(channel.title)
-                                        .font(.title2)
+                                        .font(.title)
                                         .fontWeight(.bold)
                                         .foregroundColor(.white)
                                     
                                     if let currentProgram = serviceManager.getCurrentProgram(for: channel) {
                                         // remove channel title from current program title
                                         Text(currentProgram.cleanTitle())
-                                            .font(.subheadline)
-                                            .foregroundColor(.gray)
-                                            .lineLimit(1)
+                                            .font(.headline)
+                                            .foregroundColor(.white.opacity(0.8))
+                                            .lineLimit(2)
                                     } else {
                                         Text("DR Radio Channel")
-                                            .font(.subheadline)
+                                            .font(.headline)
                                             .foregroundColor(.gray)
                                     }
                                 }
@@ -146,21 +146,66 @@ struct ChannelDetailsSheet: View {
                         }
                         .padding(.horizontal, 20)
                         
-                        // Playback Controls Section
+
+                        
+                        // Channel Description
+                        VStack(alignment: .leading, spacing: 16) {
+                            // Current Program
+                            if let currentProgram = serviceManager.getCurrentProgram(for: channel) {
+                                VStack(alignment: .leading, spacing: 12) {
+                                    if let description = currentProgram.description {
+                                        VStack(alignment: .leading, spacing: 8) {
+                                            Text("Description")
+                                                .font(.subheadline)
+                                                .fontWeight(.semibold)
+                                                .foregroundColor(.gray)
+                                            
+                                            ScrollView {
+                                                Text(description)
+                                                    .font(.body)
+                                                    .foregroundColor(.white.opacity(0.9))
+                                                    .multilineTextAlignment(.leading)
+                                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                            }
+                                            .frame(maxHeight: 200)
+                                            .padding(12)
+                                            .background(
+                                                RoundedRectangle(cornerRadius: 12)
+                                                    .fill(.ultraThinMaterial)
+                                                    .opacity(0.3)
+                                            )
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 12)
+                                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                                            )
+                                        }
+                                    } else {
+                                        Text("Live radio broadcast")
+                                            .font(.body)
+                                            .foregroundColor(.gray)
+                                    }
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                        
+                        // Play/Pause Button at Bottom
                         VStack(spacing: 16) {
-                            // Main play button
                             Button(action: {
                                 serviceManager.togglePlayback(for: channel)
                             }) {
                                 HStack(spacing: 16) {
                                     Image(systemName: serviceManager.playingChannel?.id == channel.id && serviceManager.isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                                        .font(.system(size: 32, weight: .medium))
+                                        .font(.system(size: 48, weight: .medium))
                                         .foregroundColor(.purple)
                                     
-
+                                    Text(serviceManager.playingChannel?.id == channel.id && serviceManager.isPlaying ? "Pause" : "Play")
+                                        .font(.title2)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.white)
                                 }
                                 .frame(maxWidth: .infinity)
-                                .padding(.vertical, 16)
+                                .padding(.vertical, 20)
                                 .background(
                                     RoundedRectangle(cornerRadius: 16)
                                         .fill(.ultraThinMaterial)
@@ -170,64 +215,6 @@ struct ChannelDetailsSheet: View {
                                     RoundedRectangle(cornerRadius: 16)
                                         .stroke(Color.white.opacity(0.2), lineWidth: 1)
                                 )
-                            }
-                            
-                            // Secondary controls
-                            HStack(spacing: 20) {
-                                Button(action: {}) {
-                                    VStack(spacing: 4) {
-                                        Image(systemName: "airplayaudio")
-                                            .font(.system(size: 20, weight: .medium))
-                                            .foregroundColor(.gray)
-                                        
-                                        Text("AirPlay")
-                                            .font(.caption)
-                                            .foregroundColor(.gray)
-                                    }
-                                }
-                                
-                                Button(action: {}) {
-                                    VStack(spacing: 4) {
-                                        Image(systemName: "square.and.arrow.up")
-                                            .font(.system(size: 20, weight: .medium))
-                                            .foregroundColor(.gray)
-                                        
-                                        Text("Share")
-                                            .font(.caption)
-                                            .foregroundColor(.gray)
-                                    }
-                                }
-                            }
-                        }
-                        .padding(.horizontal, 20)
-                        
-                        // Channel Description
-                        VStack(alignment: .leading, spacing: 12) {
-                            // Current Program
-                            if let currentProgram = serviceManager.getCurrentProgram(for: channel) {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("Current Program")
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
-                                        .textCase(.uppercase)
-                                    
-                                    Text(currentProgram.cleanTitle())
-                                        .font(.headline)
-                                        .fontWeight(.semibold)
-                                        .foregroundColor(.white)
-                                    
-                                    if let description = currentProgram.description {
-                                        Text(description)
-                                            .font(.subheadline)
-                                            .foregroundColor(.gray)
-                                            .lineLimit(3)
-                                    } else {
-                                        Text("Live radio broadcast")
-                                            .font(.subheadline)
-                                            .foregroundColor(.gray)
-                                            .lineLimit(3)
-                                    }
-                                }
                             }
                         }
                         .padding(.horizontal, 20)
@@ -242,12 +229,15 @@ struct ChannelDetailsSheet: View {
                     Button("Done") {
                         dismiss()
                     }
+                    .font(.headline)
+                    .fontWeight(.semibold)
                     .foregroundColor(.purple)
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {}) {
                         Image(systemName: "square.and.arrow.up")
+                            .font(.system(size: 18, weight: .medium))
                             .foregroundColor(.purple)
                     }
                 }

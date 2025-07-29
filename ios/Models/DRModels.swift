@@ -196,8 +196,24 @@ struct DREpisode: Identifiable, Codable, Equatable {
     /// Returns the program title with channel name removed to avoid duplication
     /// This is useful when displaying program titles alongside channel names
     func cleanTitle() -> String {
-        let title = title.replacingOccurrences(of: channel.slug.uppercased(), with: "").trimmingCharacters(in: .whitespacesAndNewlines)
-        return title
+        var cleanTitle = title
+        
+        // Remove channel slug (case insensitive)
+        let channelSlug = channel.slug.lowercased()
+        cleanTitle = cleanTitle.replacingOccurrences(of: channelSlug, with: "", options: .caseInsensitive)
+        
+        // Remove channel title (case insensitive)
+        let channelTitle = channel.title.lowercased()
+        cleanTitle = cleanTitle.replacingOccurrences(of: channelTitle, with: "", options: .caseInsensitive)
+        
+        // Clean up any remaining artifacts
+        cleanTitle = cleanTitle.replacingOccurrences(of: "  ", with: " ") // Remove double spaces
+        cleanTitle = cleanTitle.replacingOccurrences(of: " - ", with: " ") // Remove dash separators
+        cleanTitle = cleanTitle.replacingOccurrences(of: " | ", with: " ") // Remove pipe separators
+        cleanTitle = cleanTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // If we end up with an empty string, return the original title
+        return cleanTitle.isEmpty ? title : cleanTitle
     }
     
     var squareImageURL: String? {
