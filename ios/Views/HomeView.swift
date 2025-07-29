@@ -226,94 +226,199 @@ struct DRChannelCard: View {
     @ObservedObject var serviceManager: DRServiceManager
     let onTap: (DRChannel) -> Void
     
-    private var channelColor: Color {
-        let hash = abs(channel.id.hashValue)
-        let hue = Double(hash % 360) / 360.0
-        let saturation = 0.7 + Double(hash % 20) / 100.0
-        let brightness = 0.8 + Double(hash % 20) / 100.0
-        return Color(hue: hue, saturation: saturation, brightness: brightness)
+    // Helper function to extract channel name without slug
+    private func extractChannelName(from title: String) -> String {
+        // Remove common DR prefixes and suffixes
+        var cleanTitle = title
+            .replacingOccurrences(of: "DR ", with: "")
+            .replacingOccurrences(of: "DR-", with: "")
+            .replacingOccurrences(of: "DR_", with: "")
+        
+        // Remove any trailing numbers or common suffixes
+        cleanTitle = cleanTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // If it's just a number (like "P1", "P2"), return as is
+        if cleanTitle.matches(of: /^P\d+$/).count > 0 {
+            return cleanTitle
+        }
+        
+        // For longer names, take the first word or first few characters
+        let words = cleanTitle.components(separatedBy: .whitespaces)
+        if let firstWord = words.first, !firstWord.isEmpty {
+            return firstWord
+        }
+        
+        // Fallback to first 4 characters
+        return String(cleanTitle.prefix(4))
     }
     
-    private var channelIcon: String {
-        switch channel.slug.lowercased() {
-        case "p1":
-            return "newspaper" // News and current affairs
-        case "p2":
-            return "music.note.list" // Classical and cultural
-        case "p3":
-            return "music.mic" // Youth and popular music
-        case "p4":
-            return "location" // Regional/local
-        case "p5":
-            return "heart" // Easy listening
-        case "p6":
-            return "guitars" // Alternative music
-        case "p7":
-            return "music.note" // Mixed music
-        case "p8":
-            return "music.note.list" // Jazz
+    // Helper function to extract region from channel title
+    private func extractRegion(from title: String) -> String? {
+        // Remove common DR prefixes
+        let cleanTitle = title
+            .replacingOccurrences(of: "DR ", with: "")
+            .replacingOccurrences(of: "DR-", with: "")
+            .replacingOccurrences(of: "DR_", with: "")
+        
+        // Split by spaces and look for region indicators
+        let words = cleanTitle.components(separatedBy: .whitespaces)
+        
+        // Look for common region patterns
+        for word in words {
+            let lowercased = word.lowercased()
+            if lowercased.contains("hovedstaden") || lowercased.contains("capital") ||
+               lowercased.contains("syddanmark") || lowercased.contains("south") ||
+               lowercased.contains("midtjylland") || lowercased.contains("central") ||
+               lowercased.contains("nordjylland") || lowercased.contains("north") ||
+               lowercased.contains("sjælland") || lowercased.contains("zealand") {
+                return word
+            }
+        }
+        
+        // If no specific region found, return the second word if it exists and isn't just a number
+        if words.count > 1 {
+            let secondWord = words[1]
+            if secondWord.matches(of: /^P\d+$/).count == 0 && secondWord.count > 2 {
+                return secondWord
+            }
+        }
+        
+        return nil
+    }
+    
+    private var channelColor: Color {
+        // DR Radio channel color themes
+        switch channel.title.lowercased() {
+        case let title where title.contains("p1"):
+            return Color.orange // Dark Orange for P1
+        case let title where title.contains("p2"):
+            return Color.blue // Blue for P2
+        case let title where title.contains("p3"):
+            return Color.green // Neon Green for P3
+        case let title where title.contains("p4"):
+            return Color.yellow // Light Orange/Yellow for P4
+        case let title where title.contains("p5"):
+            return Color.pink // Pink for P5
+        case let title where title.contains("p6"):
+            return Color.gray // Gray for P6
+        case let title where title.contains("p8"):
+            return Color.purple // Purple for P8
         default:
-            return "antenna.radiowaves.left.and.right" // Default radio icon
+            // Fallback to hash-based color for other channels
+            let hash = abs(channel.id.hashValue)
+            let hue = Double(hash % 360) / 360.0
+            let saturation = 0.7 + Double(hash % 20) / 100.0
+            let brightness = 0.8 + Double(hash % 20) / 100.0
+            return Color(hue: hue, saturation: saturation, brightness: brightness)
         }
     }
+    
+
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            RoundedRectangle(cornerRadius: 12)
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            channelColor.opacity(0.9),
-                            channelColor.opacity(0.7),
-                            channelColor.opacity(0.5)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .frame(width: 140, height: 80)
-                .overlay {
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack {
-                            Text("LIVE")
-                                .font(.caption2)
-                                .fontWeight(.bold)
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Color.red)
-                                .clipShape(Capsule())
-                            
-                            Spacer()
-                            
-                            // Channel icon
-                            Image(systemName: channelIcon)
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundColor(.white.opacity(0.8))
-                            
-                            Button(action: {
-                                serviceManager.togglePlayback(for: channel)
-                            }) {
-                                Image(systemName: serviceManager.playingChannel?.id == channel.id && serviceManager.isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                                    .font(.system(size: 16))
-                                    .foregroundColor(.white)
-                            }
-                            .buttonStyle(PlainButtonStyle())
-                        }
-                        
-                        Spacer()
-                        
-                        Text(channel.title)
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                            .lineLimit(2)
-                            .multilineTextAlignment(.leading)
-                    }
-                    .padding(12)
+        ZStack {
+            // Background image or gradient
+            if let currentProgram = serviceManager.getCurrentProgram(for: channel),
+               let imageURL = currentProgram.primaryImageURL,
+               let url = URL(string: imageURL) {
+                AsyncImage(url: url) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 140, height: 80)
+                        .clipped()
+                        .blur(radius: 2)
+                } placeholder: {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    channelColor.opacity(0.9),
+                                    channelColor.opacity(0.7),
+                                    channelColor.opacity(0.5)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 140, height: 80)
                 }
+            } else {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                channelColor.opacity(0.9),
+                                channelColor.opacity(0.7),
+                                channelColor.opacity(0.5)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 140, height: 80)
+            }
+            
+            // Dark overlay for better text readability
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.black.opacity(0.8))
+                .frame(width: 140, height: 80)
+            
+            // Content overlay
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Spacer()
+                    
+                    Button(action: {
+                        serviceManager.togglePlayback(for: channel)
+                    }) {
+                        Image(systemName: serviceManager.playingChannel?.id == channel.id && serviceManager.isPlaying ? "pause.circle.fill" : "play.circle.fill")
+                            .font(.system(size: 16))
+                            .foregroundColor(.white)
+                            .shadow(color: .black, radius: 1, x: 0, y: 1)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+                
+                Spacer()
+                
+                // Channel name and region at the bottom - using full width
+                HStack(spacing: 4) {
+                    // Channel name in square with theme color
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(channelColor)
+                        .frame(width: 32, height: 32)
+                        .overlay(
+                            Text(extractChannelName(from: channel.title))
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundColor(.white)
+                                .multilineTextAlignment(.center)
+                                .lineLimit(1)
+                        )
+                    
+                    // Region name (if available) without theme color - using remaining space
+                    if let region = extractRegion(from: channel.title) {
+                        Text(region)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(.white.opacity(0.9))
+                            .lineLimit(1)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    } else {
+                        // If no region, expand the channel name to use more space
+                        Text(extractChannelName(from: channel.title))
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(.white)
+                            .lineLimit(1)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+            }
+            .padding(8)
+            .frame(width: 140, height: 80)
         }
         .frame(width: 140, height: 80)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .shadow(color: .black.opacity(0.3), radius: 8, x: 0, y: 4)
         .onTapGesture {
             onTap(channel)
         }

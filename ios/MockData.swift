@@ -213,7 +213,7 @@ struct MockData {
             trackUrn: "urn:dr:radio:track:67e5144d8b2e4877edc3324f",
             classical: false,
             roles: [
-                DRRole(
+                DRTrackRole(
                     artistUrn: "urn:dr:radio:artist:67e5144d8b2e4877edc3324g",
                     role: "Hovedkunstner",
                     name: "DR News Team",
@@ -231,7 +231,7 @@ struct MockData {
             trackUrn: "urn:dr:radio:track:67e5144d8b2e4877edc3324h",
             classical: false,
             roles: [
-                DRRole(
+                DRTrackRole(
                     artistUrn: "urn:dr:radio:artist:67e5144d8b2e4877edc3324i",
                     role: "Hovedkunstner",
                     name: "DR Weather",
@@ -249,7 +249,7 @@ struct MockData {
             trackUrn: "urn:dr:radio:track:67e5144d8b2e4877edc3324j",
             classical: false,
             roles: [
-                DRRole(
+                DRTrackRole(
                     artistUrn: "urn:dr:radio:artist:67e5144d8b2e4877edc3324k",
                     role: "Hovedkunstner",
                     name: "Miles Davis",
@@ -267,7 +267,7 @@ struct MockData {
             trackUrn: "urn:dr:radio:track:67e5144d8b2e4877edc3324l",
             classical: false,
             roles: [
-                DRRole(
+                DRTrackRole(
                     artistUrn: "urn:dr:radio:artist:67e5144d8b2e4877edc3324m",
                     role: "Hovedkunstner",
                     name: "Dave Brubeck",
@@ -285,7 +285,7 @@ struct MockData {
             trackUrn: "urn:dr:radio:track:67e5144d8b2e4877edc3324n",
             classical: false,
             roles: [
-                DRRole(
+                DRTrackRole(
                     artistUrn: "urn:dr:radio:artist:67e5144d8b2e4877edc3324o",
                     role: "Hovedkunstner",
                     name: "Modern Artist",

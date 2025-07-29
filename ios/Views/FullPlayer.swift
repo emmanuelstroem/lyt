@@ -34,26 +34,13 @@ struct FullPlayerSheet: View {
             return "antenna.radiowaves.left.and.right"
         }
         
-        switch currentChannel.slug.lowercased() {
-        case "p1":
-            return "newspaper" // News and current affairs
-        case "p2":
-            return "music.note.list" // Classical and cultural
-        case "p3":
-            return "music.mic" // Youth and popular music
-        case "p4":
-            return "location" // Regional/local
-        case "p5":
-            return "heart" // Easy listening
-        case "p6":
-            return "guitars" // Alternative music
-        case "p7":
-            return "music.note" // Mixed music
-        case "p8":
-            return "music.note.list" // Jazz
-        default:
-            return "antenna.radiowaves.left.and.right" // Default radio icon
+        // Get the current program and use its category-based icon
+        if let currentProgram = serviceManager.getCurrentProgram(for: currentChannel) {
+            return currentProgram.categoryIcon
         }
+        
+        // Fallback to default radio icon if no current program
+        return "antenna.radiowaves.left.and.right"
     }
     
     var body: some View {
@@ -147,14 +134,53 @@ struct FullPlayerSheet: View {
                     VStack(spacing: 12) {
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
-                                Text(currentChannel.title)
+                                if let track = serviceManager.currentTrack {
+                                    if track.isCurrentlyPlaying {
+                                        // Show channel-program as heading and track as subheading
+                                        let programTitle = serviceManager.getCurrentProgram(for: currentChannel)?.cleanTitle() ?? "Live"
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text("\(currentChannel.title) - \(programTitle)")
+                                                .font(.subheadline)
+                                                .fontWeight(.medium)
+                                                .foregroundColor(.white)
+                                                .lineLimit(1)
+                                            
+                                            Text(track.displayText)
+                                                .font(.caption)
+                                                .foregroundColor(.gray)
+                                                .lineLimit(1)
+                                        }
+                                    } else {
+                                        // Show channel as heading and program as subheading
+                                        let programTitle = serviceManager.getCurrentProgram(for: currentChannel)?.cleanTitle() ?? "Live"
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text(currentChannel.title)
+                                                .font(.subheadline)
+                                                .fontWeight(.medium)
+                                                .foregroundColor(.white)
+                                                .lineLimit(1)
+                                            
+                                            Text(programTitle)
+                                                .font(.caption)
+                                                .foregroundColor(.gray)
+                                                .lineLimit(1)
+                                        }
+                                    }
+                                } else if let currentProgram = serviceManager.getCurrentProgram(for: currentChannel) {
+                                    Text(currentChannel.title)
                                     .font(.title2)
                                     .fontWeight(.bold)
                                     .foregroundColor(.white)
-                                
-                                Text("DR Radio Channel")
-                                    .font(.subheadline)
-                                    .foregroundColor(.gray)
+                                    
+                                    Text(currentProgram.cleanTitle())
+                                        .font(.subheadline)
+                                        .foregroundColor(.gray)
+                                        .lineLimit(1)
+                                } else {
+                                    Text("DR Radio Channel")
+                                        .font(.subheadline)
+                                        .foregroundColor(.gray)
+                                }
                             }
                             
                             Spacer()
@@ -170,27 +196,6 @@ struct FullPlayerSheet: View {
                                     .fontWeight(.bold)
                                     .foregroundColor(.red)
                             }
-                        }
-                        
-                        // Current Program
-                        if let currentEpisode = MockData.mockEpisodeForChannel(currentChannel.id) {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Now Playing")
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
-                                    .textCase(.uppercase)
-                                
-                                Text(currentEpisode.title)
-                                    .font(.headline)
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(.white)
-                                
-                                Text(currentEpisode.description ?? "Live radio broadcast")
-                                    .font(.subheadline)
-                                    .foregroundColor(.gray)
-                                    .lineLimit(3)
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
                     .padding(.horizontal, 20)
@@ -217,68 +222,47 @@ struct FullPlayerSheet: View {
                     
                     // Main Controls
                     VStack(spacing: 24) {
-                        // Play/Pause Button
-                        Button(action: {
-                            if let playingChannel = serviceManager.playingChannel {
-                                serviceManager.togglePlayback(for: playingChannel)
+                        // Play Controls with Skip Buttons
+                        HStack(spacing: 40) {
+                            // Skip back button
+                            Button(action: {
+                                // Skip back 30 seconds (not applicable for live radio)
+                                print("🎵 Skip back 30 seconds")
+                            }) {
+                                Image(systemName: "gobackward.30")
+                                    .font(.system(size: 24, weight: .medium))
+                                    .foregroundColor(.gray)
                             }
-                        }) {
-                            Image(systemName: serviceManager.isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                                .font(.system(size: 80, weight: .medium))
-                                .foregroundColor(.purple)
+                            
+                            // Play/Pause Button
+                            Button(action: {
+                                if let playingChannel = serviceManager.playingChannel {
+                                    serviceManager.togglePlayback(for: playingChannel)
+                                }
+                            }) {
+                                Image(systemName: serviceManager.isPlaying ? "pause.circle.fill" : "play.circle.fill")
+                                    .font(.system(size: 80, weight: .medium))
+                                    .foregroundColor(.purple)
+                            }
+                            
+                            // Skip forward button
+                            Button(action: {
+                                // Skip forward 15 seconds (not applicable for live radio)
+                                print("🎵 Skip forward 15 seconds")
+                            }) {
+                                Image(systemName: "goforward.15")
+                                    .font(.system(size: 24, weight: .medium))
+                                    .foregroundColor(.gray)
+                            }
                         }
                         
-                        // Secondary Controls
-                        HStack(spacing: 40) {
-                            Button(action: {}) {
-                                VStack(spacing: 4) {
-                                    Image(systemName: "backward.fill")
-                                        .font(.system(size: 24, weight: .medium))
-                                        .foregroundColor(.gray)
-                                    
-                                    Text("Previous")
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
-                                }
-                            }
-                            
-                            Button(action: {}) {
-                                VStack(spacing: 4) {
-                                    Image(systemName: "airplayaudio")
-                                        .font(.system(size: 24, weight: .medium))
-                                        .foregroundColor(.gray)
-                                    
-                                    Text("AirPlay")
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
-                                }
-                            }
-                            
-                            Button(action: {}) {
-                                VStack(spacing: 4) {
-                                    Image(systemName: "heart")
-                                        .font(.system(size: 24, weight: .medium))
-                                        .foregroundColor(.gray)
-                                    
-                                    Text("Favorite")
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
-                                }
-                            }
-                            
-                            Button(action: {}) {
-                                VStack(spacing: 4) {
-                                    Image(systemName: "forward.fill")
-                                        .font(.system(size: 24, weight: .medium))
-                                        .foregroundColor(.gray)
-                                    
-                                    Text("Next")
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
-                                }
-                            }
+                                                // Secondary Controls
+                        HStack(spacing: 24) {
+                            AirPlayButtonView(size: 48)
+                                .frame(width: 48, height: 48)
                         }
                     }
+                    .padding(.horizontal, 20)
                     
                     Spacer()
                 }

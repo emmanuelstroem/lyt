@@ -81,7 +81,7 @@ struct DRImageAsset: Codable, Equatable {
 }
 
 // MARK: - Role Models (for tracks)
-struct DRRole: Codable, Equatable {
+struct DRTrackRole: Codable, Equatable {
     let artistUrn: String
     let role: String
     let name: String
@@ -96,7 +96,7 @@ struct DRTrack: Identifiable, Codable, Equatable {
     let musicUrl: String
     let trackUrn: String
     let classical: Bool
-    let roles: [DRRole]?
+    let roles: [DRTrackRole]?
     let title: String
     let description: String
     
@@ -120,6 +120,10 @@ struct DRTrack: Identifiable, Codable, Equatable {
     
     var artistName: String {
         return roles?.first(where: { $0.role == "Hovedkunstner" })?.name ?? description
+    }
+    
+    var displayText: String {
+        return "\(artistName): \(title)"
     }
 }
 
@@ -172,6 +176,12 @@ struct DREpisode: Identifiable, Codable, Equatable {
         guard let startDate = startDate, let endDate = endDate else { return false }
         let now = Date()
         return now >= startDate && now <= endDate
+    }
+    
+    /// Returns the program title with channel name removed to avoid duplication
+    /// This is useful when displaying program titles alongside channel names
+    func cleanTitle() -> String {
+        return title.replacingOccurrences(of: channel.title, with: "").trimmingCharacters(in: .whitespacesAndNewlines)
     }
     
     var primaryImageURL: String? {
@@ -302,6 +312,8 @@ class DRServiceManager: ObservableObject {
                 audioPlayer.pause()
             } else {
                 audioPlayer.resume()
+                // Update Command Center info when resuming
+                audioPlayer.updateCommandCenterInfo(channel: channel, program: currentLiveProgram)
             }
         } else {
             playChannel(channel)
@@ -330,6 +342,9 @@ class DRServiceManager: ObservableObject {
                     await MainActor.run {
                         self.playingChannel = channel
                         self.audioPlayer.play(url: url)
+                        
+                        // Update Command Center with channel and program info
+                        self.audioPlayer.updateCommandCenterInfo(channel: channel, program: currentProgram)
                     }
                 }
             } catch {

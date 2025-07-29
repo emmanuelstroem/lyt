@@ -290,7 +290,7 @@ struct CurrentProgramSection: View {
             }
             
             VStack(alignment: .leading, spacing: 8) {
-                Text(program.title)
+                Text(program.cleanTitle())
                     .font(.title3)
                     .fontWeight(.semibold)
                     .foregroundColor(.white)
@@ -344,7 +344,7 @@ struct PlaybackControlsSection: View {
                         .font(.system(size: 32, weight: .medium))
                         .foregroundColor(channelColor)
                     
-                    SoundbarAnimation(isPlaying: serviceManager.playingChannel?.id == channel.id && serviceManager.isPlaying, color: channelColor, audioPlayer: serviceManager.audioPlayer)
+
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
@@ -370,22 +370,6 @@ struct PlaybackControlsSection: View {
                             .foregroundColor(.gray)
                         
                         Text("AirPlay")
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                    }
-                }
-                
-                Spacer()
-                
-                Button(action: {
-                    // Add to favorites
-                }) {
-                    VStack(spacing: 4) {
-                        Image(systemName: "heart")
-                            .font(.system(size: 24, weight: .medium))
-                            .foregroundColor(.gray)
-                        
-                        Text("Favorite")
                             .font(.caption)
                             .foregroundColor(.gray)
                     }

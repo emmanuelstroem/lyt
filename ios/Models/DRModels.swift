@@ -21,6 +21,10 @@ struct DRAPIConfig {
     static let scheduleSnapshot = "\(baseURL)/schedules/snapshot"
     static let indexpointsLive = "\(baseURL)/indexpoints/live"
     
+    // Polling Configuration
+    static let trackPollingInterval: TimeInterval = 15 // 30 seconds for finished tracks
+    static let trackUpdateBuffer: TimeInterval = 5 // 5 seconds buffer before track ends
+    
     static func imageURL(for imageAssetURN: String) -> String {
         return "\(assetBaseURL)/\(imageAssetURN)"
     }
@@ -55,6 +59,12 @@ struct DRSeries: Codable, Equatable {
     let isAvailableOnDemand: Bool
     let presentationUrl: String?
     let learnId: String
+    
+    /// Returns the series title with channel name removed to avoid duplication
+    /// This is useful when displaying series titles alongside channel names
+    func cleanTitle(for channel: DRChannel) -> String {
+        return title.replacingOccurrences(of: channel.title, with: "").trimmingCharacters(in: .whitespacesAndNewlines)
+    }
 }
 
 // MARK: - Audio Asset Models
@@ -81,7 +91,7 @@ struct DRImageAsset: Codable, Equatable {
 }
 
 // MARK: - Role Models (for tracks)
-struct DRRole: Codable, Equatable {
+struct DRTrackRole: Codable, Equatable {
     let artistUrn: String
     let role: String
     let name: String
@@ -96,7 +106,7 @@ struct DRTrack: Identifiable, Codable, Equatable {
     let musicUrl: String
     let trackUrn: String
     let classical: Bool
-    let roles: [DRRole]?
+    let roles: [DRTrackRole]?
     let title: String
     let description: String
     
@@ -111,6 +121,11 @@ struct DRTrack: Identifiable, Codable, Equatable {
         return TimeInterval(durationMilliseconds / 1000)
     }
     
+    var endTime: Date? {
+        guard let playedDate = playedDate else { return nil }
+        return playedDate.addingTimeInterval(duration)
+    }
+    
     var isCurrentlyPlaying: Bool {
         guard let playedDate = playedDate else { return false }
         let now = Date()
@@ -120,6 +135,10 @@ struct DRTrack: Identifiable, Codable, Equatable {
     
     var artistName: String {
         return roles?.first(where: { $0.role == "Hovedkunstner" })?.name ?? description
+    }
+    
+    var displayText: String {
+        return "\(artistName): \(title)"
     }
 }
 
@@ -172,6 +191,12 @@ struct DREpisode: Identifiable, Codable, Equatable {
         guard let startDate = startDate, let endDate = endDate else { return false }
         let now = Date()
         return now >= startDate && now <= endDate
+    }
+    
+    /// Returns the program title with channel name removed to avoid duplication
+    /// This is useful when displaying program titles alongside channel names
+    func cleanTitle() -> String {
+        return title.replacingOccurrences(of: channel.title, with: "").trimmingCharacters(in: .whitespacesAndNewlines)
     }
     
     var squareImageURL: String? {
@@ -256,6 +281,131 @@ struct DREpisode: Identifiable, Codable, Equatable {
         // Fallback to first available image
         return imageAssets.first?.imageURL
     }
+    
+    var landscapeImageURL: String? {
+        guard let imageAssets = imageAssets, !imageAssets.isEmpty else { return nil }
+        
+        // Try to find a landscape-oriented image (16:9, 4:3, etc.)
+        let landscapeRatios = ["16:9", "4:3", "3:2", "5:3"]
+        for ratio in landscapeRatios {
+            if let landscapeImage = imageAssets.first(where: { $0.ratio == ratio }) {
+                return landscapeImage.imageURL
+            }
+        }
+        
+        // If no landscape image found, try to find any non-square image
+        if let nonSquareImage = imageAssets.first(where: { $0.ratio != "1:1" && $0.ratio != "square" }) {
+            return nonSquareImage.imageURL
+        }
+        
+        // Fallback to primary image
+        return primaryImageURL
+    }
+    
+    var categoryIcon: String {
+        guard let categories = categories, !categories.isEmpty else {
+            return "antenna.radiowaves.left.and.right" // Default radio icon
+        }
+        
+        // Convert categories to lowercase for case-insensitive matching
+        let lowercasedCategories = categories.map { $0.lowercased() }
+        
+        // Check for specific category keywords and return appropriate icons
+        if lowercasedCategories.contains(where: { $0.contains("nyheder") || $0.contains("news") || $0.contains("aktualitet") }) {
+            return "newspaper" // News and current affairs
+        }
+        
+        if lowercasedCategories.contains(where: { $0.contains("musik") || $0.contains("music") }) {
+            if lowercasedCategories.contains(where: { $0.contains("klassisk") || $0.contains("classical") }) {
+                return "music.note.list" // Classical music
+            }
+            if lowercasedCategories.contains(where: { $0.contains("jazz") }) {
+                return "music.note.list" // Jazz
+            }
+            if lowercasedCategories.contains(where: { $0.contains("pop") || $0.contains("rock") }) {
+                return "music.mic" // Popular music
+            }
+            if lowercasedCategories.contains(where: { $0.contains("folk") || $0.contains("folkemusik") }) {
+                return "guitars" // Folk music
+            }
+            return "music.note" // General music
+        }
+        
+        if lowercasedCategories.contains(where: { $0.contains("kultur") || $0.contains("culture") || $0.contains("kunst") || $0.contains("art") }) {
+            return "paintbrush" // Culture and arts
+        }
+        
+        if lowercasedCategories.contains(where: { $0.contains("sport") }) {
+            return "figure.outdoor.cycle" // Sports
+        }
+        
+        if lowercasedCategories.contains(where: { $0.contains("børn") || $0.contains("children") || $0.contains("kids") }) {
+            return "figure.child" // Children's content
+        }
+        
+        if lowercasedCategories.contains(where: { $0.contains("dokumentar") || $0.contains("documentary") }) {
+            return "doc.text" // Documentary
+        }
+        
+        if lowercasedCategories.contains(where: { $0.contains("debatt") || $0.contains("debate") || $0.contains("diskussion") }) {
+            return "bubble.left.and.bubble.right" // Debate and discussion
+        }
+        
+        if lowercasedCategories.contains(where: { $0.contains("komedie") || $0.contains("comedy") || $0.contains("humor") }) {
+            return "face.smiling" // Comedy
+        }
+        
+        if lowercasedCategories.contains(where: { $0.contains("drama") || $0.contains("teater") || $0.contains("theater") }) {
+            return "theatermasks" // Drama and theater
+        }
+        
+        if lowercasedCategories.contains(where: { $0.contains("videnskab") || $0.contains("science") || $0.contains("forskning") || $0.contains("research") }) {
+            return "atom" // Science and research
+        }
+        
+        if lowercasedCategories.contains(where: { $0.contains("historie") || $0.contains("history") }) {
+            return "book.closed" // History
+        }
+        
+        if lowercasedCategories.contains(where: { $0.contains("natur") || $0.contains("nature") || $0.contains("miljø") || $0.contains("environment") }) {
+            return "leaf" // Nature and environment
+        }
+        
+        if lowercasedCategories.contains(where: { $0.contains("sundhed") || $0.contains("health") || $0.contains("medicin") || $0.contains("medicine") }) {
+            return "heart" // Health and medicine
+        }
+        
+        if lowercasedCategories.contains(where: { $0.contains("økonomi") || $0.contains("economy") || $0.contains("business") || $0.contains("erhverv") }) {
+            return "chart.line.uptrend.xyaxis" // Economy and business
+        }
+        
+        if lowercasedCategories.contains(where: { $0.contains("politik") || $0.contains("politics") }) {
+            return "building.columns" // Politics
+        }
+        
+        if lowercasedCategories.contains(where: { $0.contains("religion") || $0.contains("tro") || $0.contains("faith") }) {
+            return "building.columns.fill" // Religion and faith
+        }
+        
+        if lowercasedCategories.contains(where: { $0.contains("rejse") || $0.contains("travel") || $0.contains("turisme") || $0.contains("tourism") }) {
+            return "airplane" // Travel and tourism
+        }
+        
+        if lowercasedCategories.contains(where: { $0.contains("mad") || $0.contains("food") || $0.contains("køkken") || $0.contains("kitchen") }) {
+            return "fork.knife" // Food and cooking
+        }
+        
+        if lowercasedCategories.contains(where: { $0.contains("teknologi") || $0.contains("technology") || $0.contains("digital") }) {
+            return "laptopcomputer" // Technology
+        }
+        
+        if lowercasedCategories.contains(where: { $0.contains("livsstil") || $0.contains("lifestyle") || $0.contains("mode") || $0.contains("fashion") }) {
+            return "person.crop.circle" // Lifestyle and fashion
+        }
+        
+        // Default fallback
+        return "antenna.radiowaves.left.and.right"
+    }
 }
 
 // MARK: - Schedule Response Models
@@ -336,6 +486,10 @@ class DRServiceManager: ObservableObject {
     private var lastSchedulesUpdate: Date?
     private let cacheValidityDuration: TimeInterval = 10 * 60 // 10 minutes
     
+    // Track polling properties
+    private var nextLivePollingTime: Date?
+    private var isPollingForTrack = false
+    
     init() {
         setupBindings()
         loadChannels()
@@ -388,83 +542,82 @@ class DRServiceManager: ObservableObject {
     }
     
     func togglePlayback(for channel: DRChannel) {
-        print("🎵 togglePlayback called for: \(channel.title)")
-        print("🎵 Current playing channel: \(playingChannel?.title ?? "None")")
-        print("🎵 Is currently playing: \(isPlaying)")
-        
         if playingChannel?.id == channel.id {
             if isPlaying {
-                print("🎵 Pausing current channel")
                 audioPlayer.pause()
+                // Stop track polling when paused
+                stopTrackPolling()
             } else {
-                print("🎵 Resuming current channel")
                 audioPlayer.resume()
+                // Restart track polling when resumed
+                Task {
+                    await getCurrentTrack(for: channel)
+                }
             }
         } else {
-            print("🎵 Starting new channel playback")
             playChannel(channel)
         }
     }
     
+    func stopPlayback() {
+        audioPlayer.stop()
+        playingChannel = nil
+        currentTrack = nil
+        currentLiveProgram = nil
+        stopTrackPolling()
+        
+        // Notify observers that playback has stopped
+        objectWillChange.send()
+    }
+    
     func playChannel(_ channel: DRChannel) {
+        // If switching to a different channel, stop polling for the previous channel
+        if let currentPlayingChannel = playingChannel, currentPlayingChannel.id != channel.id {
+            stopTrackPolling()
+        }
+        
+        // Get current program from cached schedules
+        let currentProgram = getCurrentProgram(for: channel)
+        
+        // Update UI on main actor
+        Task { @MainActor in
+            self.currentLiveProgram = currentProgram
+            self.currentTrack = nil
+        }
+        
+        // Start track polling for this channel
         Task {
-            do {
-                print("🎵 DRServiceManager: Starting playback for channel: \(channel.title)")
+            await self.getCurrentTrack(for: channel)
+        }
+        
+        // Try to get stream URL from current program first
+        var streamURL: String? = currentProgram?.streamURL
+        
+        // If no stream URL from current program, try to get from any cached program for this channel
+        if streamURL == nil {
+            let channelPrograms = cachedSchedules.filter { $0.channel.id == channel.id }
+            streamURL = channelPrograms.first?.streamURL
+        }
+        
+        // If still no stream URL, construct a fallback URL using the known DR stream pattern
+        if streamURL == nil {
+            streamURL = "https://live-icy.gss.dr.dk/AAC\(channel.slug.uppercased())"
+        }
+        
+        // Play the stream
+        if let finalStreamURL = streamURL,
+           let url = URL(string: finalStreamURL) {
+            Task { @MainActor in
+                self.playingChannel = channel
+                self.audioPlayer.play(url: url)
                 
-                // Get current program for the channel
-                let schedule = try await networkService.fetchScheduleSnapshot(for: channel.slug)
-                let currentProgram = schedule.items.first { $0.isCurrentlyPlaying }
-                
-                // Get current track
-                let indexPoints = try await networkService.fetchIndexPoints(for: channel.slug)
-                let currentTrack = indexPoints.items.first { $0.isCurrentlyPlaying }
-                
-                await MainActor.run {
-                    self.currentLiveProgram = currentProgram
-                    self.currentTrack = currentTrack
-                }
-                
-                // Try to get stream URL from current program first
-                var streamURL: String? = currentProgram?.streamURL
-                
-                // If no stream URL from current program, try to get from any program in the schedule
-                if streamURL == nil {
-                    streamURL = schedule.items.first?.streamURL
-                }
-                
-                // If still no stream URL, construct a fallback URL
-                if streamURL == nil {
-                    streamURL = "https://live-icy.gss.dr.dk/AAC\(channel.slug.uppercased())"
-                    print("🎵 DRServiceManager: Using fallback stream URL: \(streamURL ?? "None")")
-                }
-                
-                // Debug: Log the stream URL selection process
-                print("🎵 DRServiceManager: Stream URL selection:")
-                print("   - Current program: \(currentProgram?.title ?? "None")")
-                print("   - Current program type: \(currentProgram?.type ?? "None")")
-                print("   - Current program isLive: \(currentProgram?.isLive ?? false)")
-                print("   - Selected stream URL: \(streamURL ?? "None")")
-                
-                // Play the stream
-                if let finalStreamURL = streamURL,
-                   let url = URL(string: finalStreamURL) {
-                    print("🔗 Found stream URL: \(finalStreamURL)")
-                    await MainActor.run {
-                        print("🎵 Setting playing channel and starting audio")
-                        self.playingChannel = channel
-                        self.audioPlayer.play(url: url)
-                    }
-                } else {
-                    print("❌ No stream URL found for channel: \(channel.title)")
-                    await MainActor.run {
-                        self.playbackError = "No stream URL available for \(channel.title)"
-                    }
-                }
-            } catch {
-                print("❌ Error playing channel \(channel.title): \(error)")
-                await MainActor.run {
-                    self.playbackError = error.localizedDescription
-                }
+                // Update Command Center with channel and program info
+                let currentProgram = self.getCurrentProgram(for: channel)
+                self.audioPlayer.updateCommandCenterInfo(channel: channel, program: currentProgram)
+            }
+        } else {
+            Task { @MainActor in
+                self.playbackError = "No stream URL available for \(channel.title)"
             }
         }
     }
@@ -474,8 +627,78 @@ class DRServiceManager: ObservableObject {
         return channelPrograms.first { $0.isCurrentlyPlaying } ?? channelPrograms.first
     }
     
+    func getCurrentTrack(for channel: DRChannel) async -> DRTrack? {
+        do {
+            let indexPoints = try await networkService.fetchIndexPoints(for: channel.slug)
+            let currentTrack = indexPoints.items.first { $0.isCurrentlyPlaying }
+            
+            // Update current track and schedule next poll
+            await MainActor.run {
+                self.currentTrack = currentTrack
+                self.scheduleNextLivePoll(for: channel, track: currentTrack)
+            }
+            
+            return currentTrack
+        } catch {
+            return nil
+        }
+    }
+    
+
+    
+    private func stopTrackPolling() {
+        isPollingForTrack = false
+        nextLivePollingTime = nil
+    }
+    
+
+    
     func clearPlaybackError() {
         playbackError = nil
+    }
+    
+    // MARK: - New Live Polling System
+    
+    private func scheduleNextLivePoll(for channel: DRChannel, track: DRTrack?) {
+        guard let playingChannel = playingChannel, playingChannel.id == channel.id else { return }
+        
+        let now = Date()
+        
+        if let track = track, track.isCurrentlyPlaying, let endTime = track.endTime {
+            // Track is currently playing - schedule poll when it ends
+            let timeUntilEnd = endTime.timeIntervalSince(now) + DRAPIConfig.trackUpdateBuffer
+            nextLivePollingTime = endTime.addingTimeInterval(DRAPIConfig.trackUpdateBuffer)
+            
+            print("🎵 Polling: Track '\(track.displayText)' playing, next poll in \(Int(timeUntilEnd))s")
+            
+            schedulePoll(at: nextLivePollingTime!, for: channel)
+        } else {
+            // No currently playing track - use trackPollingInterval
+            let nextPollTime = now.addingTimeInterval(DRAPIConfig.trackPollingInterval)
+            nextLivePollingTime = nextPollTime
+            
+            print("🎵 Polling: No track playing, next poll in \(Int(DRAPIConfig.trackPollingInterval))s")
+            
+            schedulePoll(at: nextPollTime, for: channel)
+        }
+        
+        isPollingForTrack = true
+    }
+    
+    private func schedulePoll(at time: Date, for channel: DRChannel) {
+        let delay = time.timeIntervalSinceNow
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+            guard let self = self else { return }
+            
+            // Check if we should still poll (channel still playing)
+            guard let playingChannel = self.playingChannel, playingChannel.id == channel.id else { return }
+            
+            print("🎵 Polling: Fetching track data for \(channel.title)")
+            Task { @MainActor in
+                await self.getCurrentTrack(for: channel)
+            }
+        }
     }
 }
 

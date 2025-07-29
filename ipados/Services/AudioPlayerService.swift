@@ -8,6 +8,7 @@
 import Foundation
 import AVFoundation
 import Combine
+import UIKit
 
 // MARK: - iPadOS Audio Player Service
 
@@ -43,6 +44,10 @@ class AudioPlayerService: ObservableObject {
         isLoading = true
         error = nil
         
+        // Prevent screen from sleeping during playback
+        UIApplication.shared.isIdleTimerDisabled = true
+        print("🎵 AudioPlayerService: Disabled idle timer to prevent screen sleep")
+        
         // Create new player item
         let playerItem = AVPlayerItem(url: url)
         
@@ -71,6 +76,9 @@ class AudioPlayerService: ObservableObject {
                 case .failed:
                     self?.isLoading = false
                     self?.error = playerItem.error?.localizedDescription ?? "Failed to load audio"
+                    // Re-enable idle timer on failure
+                    UIApplication.shared.isIdleTimerDisabled = false
+                    print("🎵 AudioPlayerService: Re-enabled idle timer due to playback failure")
                 case .unknown:
                     break
                 @unknown default:
@@ -100,11 +108,19 @@ class AudioPlayerService: ObservableObject {
     func pause() {
         player?.pause()
         isPlaying = false
+        
+        // Re-enable idle timer to allow screen sleep when paused
+        UIApplication.shared.isIdleTimerDisabled = false
+        print("🎵 AudioPlayerService: Re-enabled idle timer due to pause")
     }
     
     func resume() {
         player?.play()
         isPlaying = true
+        
+        // Disable idle timer to prevent screen sleep during playback
+        UIApplication.shared.isIdleTimerDisabled = true
+        print("🎵 AudioPlayerService: Disabled idle timer to prevent screen sleep")
     }
     
     func stop() {
@@ -114,6 +130,10 @@ class AudioPlayerService: ObservableObject {
         currentTime = 0
         duration = 0
         removeTimeObserver()
+        
+        // Re-enable idle timer to allow screen sleep
+        UIApplication.shared.isIdleTimerDisabled = false
+        print("🎵 AudioPlayerService: Re-enabled idle timer to allow screen sleep")
     }
     
     func seek(to time: TimeInterval) {

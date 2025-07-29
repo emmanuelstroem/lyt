@@ -11,7 +11,18 @@ import SwiftUI
 struct lytApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            VStack {
+                Text("Lyt App")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                
+                Text("Views, Services, and Models have been removed")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding()
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 }
