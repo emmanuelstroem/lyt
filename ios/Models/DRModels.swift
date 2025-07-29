@@ -661,17 +661,6 @@ class DRServiceManager: ObservableObject {
             
             return currentTrack
         } catch {
-            // Handle HTTP errors by scheduling next poll at current time + trackPollingInterval
-            await MainActor.run {
-                let now = Date()
-                let nextPollTime = now.addingTimeInterval(DRAPIConfig.trackPollingInterval)
-                self.nextLivePollingTime = nextPollTime
-                
-                print("🎵 Polling: HTTP Error occurred, scheduling next poll in \(Int(DRAPIConfig.trackPollingInterval))s")
-                
-                self.schedulePoll(at: nextPollTime, for: channel)
-            }
-            
             return nil
         }
     }

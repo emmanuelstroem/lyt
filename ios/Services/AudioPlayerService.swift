@@ -127,9 +127,9 @@ class AudioPlayerService: NSObject, ObservableObject {
             return .success
         }
         
-        // Configure stop command
+        // Configure stop command (acts like pause for live radio)
         commandCenter?.stopCommand.addTarget { [weak self] _ in
-            self?.stop()
+            self?.pause()
             return .success
         }
         
@@ -143,12 +143,38 @@ class AudioPlayerService: NSObject, ObservableObject {
             return .success
         }
         
-        // Disable seeking commands since this is live radio
-        commandCenter?.seekForwardCommand.isEnabled = false
-        commandCenter?.seekBackwardCommand.isEnabled = false
-        commandCenter?.skipForwardCommand.isEnabled = false
-        commandCenter?.skipBackwardCommand.isEnabled = false
-        commandCenter?.changePlaybackPositionCommand.isEnabled = false
+        // Configure skip backward command (1 second interval for live radio)
+        commandCenter?.skipBackwardCommand.preferredIntervals = [30]
+        commandCenter?.skipBackwardCommand.isEnabled = true
+        commandCenter?.skipBackwardCommand.addTarget { [weak self] event in
+            self?.skipBackward(by: 30)
+            return .success
+        }
+        
+        // Configure skip forward command (1 second interval for live radio)
+        commandCenter?.skipForwardCommand.preferredIntervals = [1]
+        commandCenter?.skipForwardCommand.isEnabled = true
+        commandCenter?.skipForwardCommand.addTarget { [weak self] event in
+            self?.skipForward()
+            return .success
+        }
+        
+        // Configure seeking commands for live radio
+        commandCenter?.seekForwardCommand.isEnabled = true
+        commandCenter?.seekBackwardCommand.isEnabled = true
+        commandCenter?.changePlaybackPositionCommand.isEnabled = true
+        
+        // Set up seek forward command
+        commandCenter?.seekForwardCommand.addTarget { [weak self] event in
+            self?.skipForward()
+            return .success
+        }
+        
+        // Set up seek backward command
+        commandCenter?.seekBackwardCommand.addTarget { [weak self] event in
+            self?.skipBackward(by: 30)
+            return .success
+        }
     }
     
     private func cleanupCommandCenter() {
@@ -157,6 +183,10 @@ class AudioPlayerService: NSObject, ObservableObject {
         commandCenter?.pauseCommand.removeTarget(nil)
         commandCenter?.stopCommand.removeTarget(nil)
         commandCenter?.togglePlayPauseCommand.removeTarget(nil)
+        commandCenter?.skipForwardCommand.removeTarget(nil)
+        commandCenter?.skipBackwardCommand.removeTarget(nil)
+        commandCenter?.seekForwardCommand.removeTarget(nil)
+        commandCenter?.seekBackwardCommand.removeTarget(nil)
         
         // Clear now playing info
         nowPlayingInfoCenter?.nowPlayingInfo = nil
@@ -185,9 +215,14 @@ class AudioPlayerService: NSObject, ObservableObject {
             nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = "Live"
         }
         
-        // Set duration to 0 for live radio (no progress bar)
-        nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = 0.0
-        nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = 0.0
+        // Set duration and elapsed time to show "LIVE" in progress bar
+        // Using a small duration to show progress bar with "LIVE" text
+        nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = 1.0
+        nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = 0.5
+        nowPlayingInfo[MPNowPlayingInfoPropertyDefaultPlaybackRate] = 1.0
+        
+        // Add live indicator
+        nowPlayingInfo[MPNowPlayingInfoPropertyIsLiveStream] = true
         
         // Set playback rate
         nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying ? 1.0 : 0.0
@@ -264,6 +299,12 @@ class AudioPlayerService: NSObject, ObservableObject {
         var nowPlayingInfo = nowPlayingInfoCenter?.nowPlayingInfo ?? [:]
         nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying ? 1.0 : 0.0
         nowPlayingInfoCenter?.nowPlayingInfo = nowPlayingInfo
+        
+        // Enable/disable skip commands based on playback state
+        commandCenter?.skipForwardCommand.isEnabled = isPlaying
+        commandCenter?.skipBackwardCommand.isEnabled = isPlaying
+        commandCenter?.seekForwardCommand.isEnabled = isPlaying
+        commandCenter?.seekBackwardCommand.isEnabled = isPlaying
     }
     
     func clearCommandCenterInfo() {
@@ -291,17 +332,13 @@ class AudioPlayerService: NSObject, ObservableObject {
             // Then activate
             try audioSession.setActive(true)
             
-            // Optionally prevent screen sleep during playback
-            // You can control this manually or let it be automatic
-            // setPreventScreenSleep(true)
-            
             // Setup AirPlay monitoring if not already done
             if !audioSessionSetup {
                 setupAirPlayMonitoring()
                 audioSessionSetup = true
             }
         } catch {
-            print("❌ AudioPlayerService: Failed to setup/activate audio session: \(error)")
+            // Silent error handling
         }
         
         // Create new player item
@@ -439,6 +476,34 @@ class AudioPlayerService: NSObject, ObservableObject {
     func setPreventScreenSleep(_ prevent: Bool) {
         preventScreenSleep = prevent
         updateIdleTimer()
+    }
+    
+    // MARK: - Skip Functionality
+    
+    func skipForward() {
+        // For live radio, skip forward means jump to the live position
+        // This effectively "catches up" to the live stream
+        if let player = player {
+            // For live radio, seek to the end of the stream (live position)
+            // This will jump to the current live broadcast
+            player.seek(to: .positiveInfinity)
+            
+            // Update the command center to reflect we're at live position
+            updateCommandCenterPlaybackState()
+        }
+    }
+    
+    func skipBackward(by interval: TimeInterval) {
+        // For live radio, skip backward jumps to the beginning of the current stream
+        // This effectively "restarts" the current live broadcast
+        if let player = player {
+            // Jump to the beginning of the current stream (0 seconds)
+            let startTime = CMTime(seconds: 0, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+            player.seek(to: startTime)
+            
+            // Update the command center to reflect we're at the beginning
+            updateCommandCenterPlaybackState()
+        }
     }
     
 

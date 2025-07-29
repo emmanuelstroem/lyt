@@ -226,8 +226,8 @@ struct FullPlayerSheet: View {
                         HStack(spacing: 40) {
                             // Skip back button
                             Button(action: {
-                                // Skip back 30 seconds (not applicable for live radio)
-                                print("🎵 Skip back 30 seconds")
+                                // Skip back 30 seconds (go to live for live radio)
+                                serviceManager.audioPlayer.skipBackward(by: 30)
                             }) {
                                 Image(systemName: "gobackward.30")
                                     .font(.system(size: 24, weight: .medium))
@@ -247,10 +247,10 @@ struct FullPlayerSheet: View {
                             
                             // Skip forward button
                             Button(action: {
-                                // Skip forward 15 seconds (not applicable for live radio)
-                                print("🎵 Skip forward 15 seconds")
+                                // Skip forward (go to live for live radio)
+                                serviceManager.audioPlayer.skipForward()
                             }) {
-                                Image(systemName: "goforward.15")
+                                Image(systemName: "goforward.plus")
                                     .font(.system(size: 24, weight: .medium))
                                     .foregroundColor(.gray)
                             }
