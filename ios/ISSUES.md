@@ -24,7 +24,7 @@
 
 ## Performance Issues
 - [ ] Large channel lists may cause scrolling performance issues
-- [ ] Image loading could be optimized with caching
+- [x] Image loading could be optimized with caching
 - [ ] Memory usage could be improved with better data management
 
 ## Platform-Specific Issues

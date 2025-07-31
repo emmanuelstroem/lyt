@@ -433,6 +433,58 @@ struct DRScheduleResponse: Codable, Equatable {
     let scheduleDate: String?
 }
 
+// MARK: - Schedule Item for /schedules/all/now endpoint
+struct DRScheduleItem: Codable, Equatable {
+    let type: String
+    let learnId: String? // Make optional since some items don't have it
+    let durationMilliseconds: Int
+    let categories: [String]?
+    let productionNumber: String?
+    let startTime: String
+    let endTime: String
+    let presentationUrl: String?
+    let order: Int
+    let series: DRSeries?
+    let channel: DRChannel
+    let audioAssets: [DRAudioAsset]?
+    let isAvailableOnDemand: Bool
+    let hasVideo: Bool?
+    let explicitContent: Bool?
+    let title: String? // Some items have this field
+    let description: String? // Some items have this field
+    let imageAssets: [DRImageAsset]? // Some items have this field
+    
+    // Convert to DREpisode for compatibility
+    func toEpisode() -> DREpisode {
+        return DREpisode(
+            type: type,
+            learnId: learnId ?? "", // Use empty string if learnId is nil
+            durationMilliseconds: durationMilliseconds,
+            categories: categories,
+            productionNumber: productionNumber,
+            startTime: startTime,
+            endTime: endTime,
+            presentationUrl: presentationUrl,
+            order: order,
+            previousId: nil,
+            nextId: nil,
+            series: series,
+            channel: channel,
+            audioAssets: audioAssets,
+            isAvailableOnDemand: isAvailableOnDemand,
+            hasVideo: hasVideo,
+            explicitContent: explicitContent,
+            id: learnId ?? "", // Use learnId or empty string
+            slug: series?.slug ?? channel.slug,
+            title: title ?? series?.title ?? channel.title,
+            description: description,
+            imageAssets: imageAssets,
+            episodeNumber: nil,
+            seasonNumber: nil
+        )
+    }
+}
+
 struct DRAllSchedulesResponse: Codable, Equatable {
     let schedules: [DREpisode]
 }
@@ -496,6 +548,7 @@ class DRServiceManager: ObservableObject {
     
     let audioPlayer = AudioPlayerService()
     private let networkService = DRNetworkService()
+    private let imageCache = ImageCacheService.shared
     private var cancellables = Set<AnyCancellable>()
     
     // Caching properties
@@ -549,6 +602,9 @@ class DRServiceManager: ObservableObject {
                     self.availableChannels = channels
                     self.isLoading = false
                 }
+                
+                // Preload images for all channels
+                await self.preloadChannelImages(from: schedules)
             } catch {
                 await MainActor.run {
                     self.error = error.localizedDescription
@@ -757,6 +813,28 @@ class DRServiceManager: ObservableObject {
         isPollingForTrack = true
     }
     
+    // MARK: - Image Preloading
+    
+    /// Preloads all images from episodes to improve performance
+    /// - Parameter schedules: Array of episodes containing image URLs
+    private func preloadChannelImages(from schedules: [DREpisode]) async {
+        // Use priority-based preloading for optimal performance
+        imageCache.preloadImagesWithPriority(from: schedules)
+        
+        print("🖼️ Started priority-based image preloading for \(schedules.count) episodes")
+    }
+    
+    /// Returns image cache statistics
+    func getImageCacheStatistics() -> (memoryCount: Int, diskSize: Int64) {
+        return imageCache.getCacheStatistics()
+    }
+    
+    /// Clears all cached images
+    func clearImageCache() {
+        imageCache.clearAllCaches()
+        print("🗑️ Image cache cleared")
+    }
+    
     private func schedulePoll(at time: Date, for channel: DRChannel) {
         let delay = time.timeIntervalSinceNow
         
@@ -771,6 +849,22 @@ class DRServiceManager: ObservableObject {
                 await self.getCurrentTrack(for: channel)
             }
         }
+    }
+}
+
+// MARK: - Array Extension
+extension Array where Element: Hashable {
+    func uniqued() -> [Element] {
+        return Array(Set(self))
+    }
+}
+
+// MARK: - Image Asset Extensions
+extension DREpisode {
+    /// Returns all image URLs from this episode
+    var allImageURLs: [String] {
+        guard let imageAssets = imageAssets else { return [] }
+        return imageAssets.map { $0.imageURL }
     }
 }
 

@@ -44,7 +44,7 @@ struct ChannelDetailsSheet: View {
                             if let currentProgram = serviceManager.getCurrentProgram(for: channel),
                                let imageURL = currentProgram.landscapeImageURL,
                                let url = URL(string: imageURL) {
-                                AsyncImage(url: url) { image in
+                                CachedAsyncImage(url: url) { image in
                                     image
                                         .resizable()
                                         .aspectRatio(contentMode: .fit)

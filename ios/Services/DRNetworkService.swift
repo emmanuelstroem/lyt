@@ -46,9 +46,15 @@ class DRNetworkService {
         }
         
         do {
-            let schedules = try decoder.decode([DREpisode].self, from: data)
-            print("✅ Successfully fetched \(schedules.count) schedules")
-            return schedules
+            // Decode as DRScheduleItem array first
+            let scheduleItems = try decoder.decode([DRScheduleItem].self, from: data)
+            print("✅ Successfully fetched \(scheduleItems.count) schedule items")
+            
+            // Convert to DREpisode objects
+            let episodes = scheduleItems.map { $0.toEpisode() }
+            print("✅ Converted to \(episodes.count) episodes")
+            
+            return episodes
         } catch {
             print("❌ Decoding error: \(error)")
             

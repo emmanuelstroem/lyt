@@ -275,6 +275,11 @@ struct DRChannelCard: View {
             }
         }
         
+        // For national channels, return "DR" as the region
+        if title.contains("DR P") {
+            return "DR"
+        }
+        
         // If no specific region found, return the second word if it exists and isn't just a number
         if words.count > 1 {
             let secondWord = words[1]
@@ -321,7 +326,7 @@ struct DRChannelCard: View {
             if let currentProgram = serviceManager.getCurrentProgram(for: channel),
                let imageURL = currentProgram.primaryImageURL,
                let url = URL(string: imageURL) {
-                AsyncImage(url: url) { image in
+                CachedAsyncImage(url: url) { image in
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fill)
@@ -365,7 +370,7 @@ struct DRChannelCard: View {
                 .frame(width: 140, height: 80)
             
             // Content overlay
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Spacer()
                     
@@ -382,38 +387,31 @@ struct DRChannelCard: View {
                 
                 Spacer()
                 
-                // Channel name and region at the bottom - using full width
-                HStack(spacing: 4) {
-                    // Channel name in square with theme color
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(channelColor)
-                        .frame(width: 32, height: 32)
-                        .overlay(
-                            Text(extractChannelName(from: channel.title))
-                                .font(.system(size: 12, weight: .bold))
-                                .foregroundColor(.white)
-                                .multilineTextAlignment(.center)
-                                .lineLimit(1)
-                        )
+                // Bottom section with channel title and region
+                HStack(alignment: .bottom, spacing: 4) {
+                    // Channel title in square view
+                    KnockoutTextView(
+                        text: extractChannelName(from: channel.title), 
+                        backgroundColor: channelColor
+                    )
+                    .frame(width: 40, height: 40)
+                    .cornerRadius(6)
                     
-                    // Region name (if available) without theme color - using remaining space
+                    // Region text inline with channel title
                     if let region = extractRegion(from: channel.title) {
-                        Text(region)
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundColor(.white.opacity(0.9))
+                        Text(" \(region)")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(channelColor)
                             .lineLimit(1)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    } else {
-                        // If no region, expand the channel name to use more space
-                        Text(extractChannelName(from: channel.title))
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(.white)
-                            .lineLimit(1)
+                            .minimumScaleFactor(0.1)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
+                    
+                    Spacer()
                 }
+//                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(8)
+//            .padding(4)
             .frame(width: 140, height: 80)
         }
         .frame(width: 140, height: 80)
@@ -482,3 +480,40 @@ struct PlaybackErrorAlert: View {
         selectionState: SelectionState()
     )
 } 
+
+
+
+struct KnockoutTextView: View {
+    var text: String
+    var backgroundColor: Color = .blue
+    
+    var body: some View {
+        ZStack {
+            // Square with transparent text
+            TextMaskView(text: text, backgroundColor: backgroundColor)
+        }
+    }
+}
+
+struct TextMaskView: View {
+    var text: String
+    var backgroundColor: Color
+    
+    var body: some View {
+        // Solid color square
+        backgroundColor
+            .overlay {
+                // Transparent text mask
+                GeometryReader { geo in
+                    Text(text)
+                        .font(.system(size: geo.size.width * 0.6, weight: .black, design: .default))
+                        .minimumScaleFactor(0.1)
+                        .lineLimit(1)
+                        .frame(width: geo.size.width, height: geo.size.height)
+                        .foregroundColor(.black)
+                        .blendMode(.destinationOut) // Punch out the text
+                }
+            }
+            .compositingGroup() // Required for destinationOut to work properly
+    }
+}

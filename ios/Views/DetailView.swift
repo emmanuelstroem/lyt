@@ -95,7 +95,7 @@ struct ChannelArtworkSection: View {
             if let currentProgram = serviceManager.getCurrentProgram(for: channel),
                let imageURL = currentProgram.primaryImageURL,
                let url = URL(string: imageURL) {
-                AsyncImage(url: url) { image in
+                CachedAsyncImage(url: url) { image in
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fill)
@@ -271,7 +271,7 @@ struct CurrentProgramSection: View {
             // Program Image
             if let imageURL = program.primaryImageURL,
                let url = URL(string: imageURL) {
-                AsyncImage(url: url) { image in
+                CachedAsyncImage(url: url) { image in
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fill)

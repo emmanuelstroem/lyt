@@ -65,7 +65,7 @@ struct FullPlayerSheet: View {
                             if let currentProgram = serviceManager.getCurrentProgram(for: currentChannel),
                                let imageURL = currentProgram.primaryImageURL,
                                let url = URL(string: imageURL) {
-                                AsyncImage(url: url) { image in
+                                CachedAsyncImage(url: url) { image in
                                     image
                                         .resizable()
                                         .aspectRatio(contentMode: .fill)

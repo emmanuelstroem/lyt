@@ -32,7 +32,7 @@
 - [ ] Add notifications for favorite programs
 
 ### Performance Optimizations
-- [ ] Implement image caching and lazy loading
+- [x] Implement image caching and lazy loading
 - [ ] Optimize list scrolling performance
 - [ ] Add pagination for large channel lists
 - [ ] Implement background data prefetching
