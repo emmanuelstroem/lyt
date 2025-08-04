@@ -66,6 +66,7 @@
 ## Long Term (Future Releases)
 
 ### Advanced Audio Features
+- [x] Implement audio interruption handling (resume after alarm/phone call)
 - [ ] Add audio equalizer
 - [ ] Implement sleep timer
 - [ ] Add audio quality selection

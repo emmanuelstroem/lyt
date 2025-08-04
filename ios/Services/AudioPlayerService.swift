@@ -39,6 +39,7 @@ class AudioPlayerService: NSObject, ObservableObject {
     override init() {
         super.init()
         setupCommandCenter()
+        setupAudioInterruptionHandling()
             // Allow screen sleep by default on app launch
         setPreventScreenSleep(false)
             // Audio session will be setup when first needed
@@ -55,6 +56,115 @@ class AudioPlayerService: NSObject, ObservableObject {
     }
     
     private var audioSessionSetup = false
+    private var wasPlayingBeforeInterruption = false
+    
+    // MARK: - Audio Interruption Handling
+    
+    private func setupAudioInterruptionHandling() {
+        // Observe audio session interruptions
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAudioInterruption),
+            name: AVAudioSession.interruptionNotification,
+            object: nil
+        )
+        
+        // Observe when audio session becomes active/inactive
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAudioSessionRouteChange),
+            name: AVAudioSession.routeChangeNotification,
+            object: nil
+        )
+    }
+    
+    @objc private func handleAudioInterruption(notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
+              let type = AVAudioSession.InterruptionType(rawValue: typeValue) else {
+            return
+        }
+        
+        switch type {
+        case .began:
+            // Audio interruption started (e.g., phone call, alarm, etc.)
+            wasPlayingBeforeInterruption = isPlaying
+            if isPlaying {
+                pause()
+            }
+            
+        case .ended:
+            // Audio interruption ended
+            guard let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt else {
+                return
+            }
+            
+            let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
+            
+            if options.contains(.shouldResume) && wasPlayingBeforeInterruption {
+                // Resume playback if it was playing before interruption
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                    self?.resumeAfterInterruption()
+                }
+            }
+            
+        @unknown default:
+            break
+        }
+    }
+    
+    @objc private func handleAudioSessionRouteChange(notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let reasonValue = userInfo[AVAudioSessionRouteChangeReasonKey] as? UInt,
+              let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue) else {
+            return
+        }
+        
+        switch reason {
+        case .oldDeviceUnavailable:
+            // Audio output device was disconnected (e.g., headphones unplugged)
+            if isPlaying {
+                pause()
+            }
+            
+        case .newDeviceAvailable:
+            // New audio output device available
+            // Optionally resume if it was playing before
+            if wasPlayingBeforeInterruption {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                    self?.resumeAfterInterruption()
+                }
+            }
+            
+        default:
+            break
+        }
+    }
+    
+    private func resumeAfterInterruption() {
+        // Only resume if we have a valid player and it was playing before interruption
+        guard let player = player, wasPlayingBeforeInterruption else {
+            return
+        }
+        
+        // Reactivate audio session
+        do {
+            let audioSession = AVAudioSession.sharedInstance()
+            try audioSession.setCategory(.playback, mode: .default)
+            try audioSession.setActive(true)
+        } catch {
+            print("Failed to reactivate audio session after interruption: \(error)")
+            return
+        }
+        
+        // Resume playback
+        player.play()
+        isPlaying = true
+        wasPlayingBeforeInterruption = false
+        
+        // Update Command Center playback state
+        updateCommandCenterPlaybackState()
+    }
     
         // MARK: - Screen Sleep Control
     
@@ -321,6 +431,7 @@ class AudioPlayerService: NSObject, ObservableObject {
     func play(url: URL) {
         isLoading = true
         error = nil
+        wasPlayingBeforeInterruption = false
         
             // Setup and activate audio session when starting playback
         do {
@@ -404,6 +515,11 @@ class AudioPlayerService: NSObject, ObservableObject {
     func pause() {
         player?.pause()
         isPlaying = false
+        
+        // Only reset the interruption flag if this is a manual pause (not due to interruption)
+        if !wasPlayingBeforeInterruption {
+            wasPlayingBeforeInterruption = false
+        }
         
             // Deactivate audio session when pausing to allow screen sleep
         do {
