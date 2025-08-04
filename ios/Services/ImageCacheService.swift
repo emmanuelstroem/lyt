@@ -1,40 +1,40 @@
-//
-//  ImageCacheService.swift
-//  ios
-//
-//  Created by Emmanuel on 27/07/2025.
-//
+    //
+    //  ImageCacheService.swift
+    //  ios
+    //
+    //  Created by Emmanuel on 27/07/2025.
+    //
 
 import Foundation
 import UIKit
 import SwiftUI
 
-// MARK: - Image Cache Service
+    // MARK: - Image Cache Service
 
 class ImageCacheService: ObservableObject {
     static let shared = ImageCacheService()
     
-    // MARK: - Properties
+        // MARK: - Properties
     private let memoryCache = NSCache<NSString, UIImage>()
     private let fileManager = FileManager.default
     private let cacheDirectory: URL
     private let maxMemoryCacheSize = 50 // Maximum number of images in memory
     private let maxDiskCacheSize = 100 * 1024 * 1024 // 100 MB disk cache
     
-    // MARK: - Initialization
+        // MARK: - Initialization
     private init() {
-        // Configure memory cache
+            // Configure memory cache
         memoryCache.countLimit = maxMemoryCacheSize
         memoryCache.totalCostLimit = maxMemoryCacheSize * 1024 * 1024 // 50 MB
         
-        // Setup cache directory
+            // Setup cache directory
         let documentsPath = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
         cacheDirectory = documentsPath.appendingPathComponent("ImageCache")
         
-        // Create cache directory if it doesn't exist
+            // Create cache directory if it doesn't exist
         try? fileManager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
         
-        // Setup memory warning observer
+            // Setup memory warning observer
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(clearMemoryCache),
@@ -42,7 +42,7 @@ class ImageCacheService: ObservableObject {
             object: nil
         )
         
-        // Clean up old cache files on startup
+            // Clean up old cache files on startup
         Task {
             await cleanupOldCacheFiles()
         }
@@ -52,12 +52,12 @@ class ImageCacheService: ObservableObject {
         NotificationCenter.default.removeObserver(self)
     }
     
-    // MARK: - Public Methods
+        // MARK: - Public Methods
     
-    /// Loads an image from cache or network
-    /// - Parameters:
-    ///   - urlString: The URL string of the image
-    ///   - completion: Completion handler with the loaded image or nil if failed
+        /// Loads an image from cache or network
+        /// - Parameters:
+        ///   - urlString: The URL string of the image
+        ///   - completion: Completion handler with the loaded image or nil if failed
     func loadImage(from urlString: String, completion: @escaping (UIImage?) -> Void) {
         guard let url = URL(string: urlString) else {
             completion(nil)
@@ -66,26 +66,26 @@ class ImageCacheService: ObservableObject {
         
         let cacheKey = NSString(string: urlString)
         
-        // Check memory cache first
+            // Check memory cache first
         if let cachedImage = memoryCache.object(forKey: cacheKey) {
             completion(cachedImage)
             return
         }
         
-        // Check disk cache
+            // Check disk cache
         if let diskImage = loadImageFromDisk(for: cacheKey) {
             memoryCache.setObject(diskImage, forKey: cacheKey)
             completion(diskImage)
             return
         }
         
-        // Download from network
+            // Download from network
         downloadImage(from: url, cacheKey: cacheKey, completion: completion)
     }
     
-    /// Loads an image asynchronously using async/await
-    /// - Parameter urlString: The URL string of the image
-    /// - Returns: The loaded image or nil if failed
+        /// Loads an image asynchronously using async/await
+        /// - Parameter urlString: The URL string of the image
+        /// - Returns: The loaded image or nil if failed
     func loadImage(from urlString: String) async -> UIImage? {
         return await withCheckedContinuation { continuation in
             loadImage(from: urlString) { image in
@@ -94,8 +94,8 @@ class ImageCacheService: ObservableObject {
         }
     }
     
-    /// Preloads images for better performance
-    /// - Parameter urls: Array of URL strings to preload
+        /// Preloads images for better performance
+        /// - Parameter urls: Array of URL strings to preload
     func preloadImages(from urls: [String]) {
         Task {
             await withTaskGroup(of: Void.self) { group in
@@ -108,8 +108,8 @@ class ImageCacheService: ObservableObject {
         }
     }
     
-    /// Preloads all images from episodes with background priority
-    /// - Parameter episodes: Array of episodes containing image assets
+        /// Preloads all images from episodes with background priority
+        /// - Parameter episodes: Array of episodes containing image assets
     func preloadAllEpisodeImages(from episodes: [DREpisode], priority: TaskPriority = .background) {
         Task(priority: priority) {
             let allImageURLs = extractAllImageURLs(from: episodes)
@@ -127,10 +127,10 @@ class ImageCacheService: ObservableObject {
         }
     }
     
-    /// Preloads images with different priorities based on usage patterns
-    /// - Parameter episodes: Array of episodes
+        /// Preloads images with different priorities based on usage patterns
+        /// - Parameter episodes: Array of episodes
     func preloadImagesWithPriority(from episodes: [DREpisode]) {
-        // High priority: Primary images (immediate use)
+            // High priority: Primary images (immediate use)
         let primaryURLs = episodes.compactMap { $0.primaryImageURL }.uniqued()
         Task(priority: .userInitiated) {
             print("🖼️ High priority: Preloading \(primaryURLs.count) primary images")
@@ -144,7 +144,7 @@ class ImageCacheService: ObservableObject {
             print("✅ High priority image preloading completed")
         }
         
-        // Medium priority: Landscape images (detail views)
+            // Medium priority: Landscape images (detail views)
         let landscapeURLs = episodes.compactMap { $0.landscapeImageURL }.uniqued()
         Task(priority: .utility) {
             print("🖼️ Medium priority: Preloading \(landscapeURLs.count) landscape images")
@@ -158,7 +158,7 @@ class ImageCacheService: ObservableObject {
             print("✅ Medium priority image preloading completed")
         }
         
-        // Low priority: All remaining images (background)
+            // Low priority: All remaining images (background)
         let allURLs = extractAllImageURLs(from: episodes)
         let remainingURLs = allURLs.filter { url in
             !primaryURLs.contains(url) && !landscapeURLs.contains(url)
@@ -177,9 +177,9 @@ class ImageCacheService: ObservableObject {
         }
     }
     
-    /// Extracts all unique image URLs from episodes
-    /// - Parameter episodes: Array of episodes
-    /// - Returns: Array of unique image URLs
+        /// Extracts all unique image URLs from episodes
+        /// - Parameter episodes: Array of episodes
+        /// - Returns: Array of unique image URLs
     private func extractAllImageURLs(from episodes: [DREpisode]) -> [String] {
         var allURLs: Set<String> = []
         
@@ -190,20 +190,20 @@ class ImageCacheService: ObservableObject {
         return Array(allURLs)
     }
     
-    /// Clears all cached images
+        /// Clears all cached images
     func clearAllCaches() {
         clearMemoryCache()
         clearDiskCache()
     }
     
-    /// Returns cache statistics
+        /// Returns cache statistics
     func getCacheStatistics() -> (memoryCount: Int, diskSize: Int64) {
         let memoryCount = memoryCache.totalCostLimit
         let diskSize = getDiskCacheSize()
         return (memoryCount, diskSize)
     }
     
-    /// Gets the current disk cache size in bytes
+        /// Gets the current disk cache size in bytes
     private func getDiskCacheSize() -> Int64 {
         guard let files = try? fileManager.contentsOfDirectory(at: cacheDirectory, includingPropertiesForKeys: [.fileSizeKey]) else {
             return 0
@@ -215,7 +215,7 @@ class ImageCacheService: ObservableObject {
         }
     }
     
-    // MARK: - Private Methods
+        // MARK: - Private Methods
     
     private func downloadImage(from url: URL, cacheKey: NSString, completion: @escaping (UIImage?) -> Void) {
         URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
@@ -228,7 +228,7 @@ class ImageCacheService: ObservableObject {
                 return
             }
             
-            // Cache the image
+                // Cache the image
             self.memoryCache.setObject(image, forKey: cacheKey)
             self.saveImageToDisk(image, for: cacheKey)
             
@@ -276,7 +276,7 @@ class ImageCacheService: ObservableObject {
             return total + size
         }
         
-        // If cache is too large, remove oldest files
+            // If cache is too large, remove oldest files
         if totalSize > maxDiskCacheSize {
             let sortedFiles = files.sorted { file1, file2 in
                 guard let date1 = try? file1.resourceValues(forKeys: [.creationDateKey]).creationDate,
@@ -301,7 +301,7 @@ class ImageCacheService: ObservableObject {
     }
 }
 
-// MARK: - Cached AsyncImage View
+    // MARK: - Cached AsyncImage View
 
 struct CachedAsyncImage<Content: View, Placeholder: View>: View {
     let url: URL?
@@ -349,7 +349,7 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
     }
 }
 
-// MARK: - Convenience Extensions
+    // MARK: - Convenience Extensions
 
 extension CachedAsyncImage where Placeholder == EmptyView {
     init(url: URL?, @ViewBuilder content: @escaping (Image) -> Content) {

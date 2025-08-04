@@ -297,9 +297,9 @@ struct CurrentProgramSection: View {
                     .lineLimit(2)
                 
                 Text(program.description ?? "no description")
-                        .font(.body)
-                        .foregroundColor(.gray)
-                        .lineLimit(3)
+                    .font(.body)
+                    .foregroundColor(.gray)
+                    .lineLimit(3)
                 
                 HStack {
                     Image(systemName: "clock")
@@ -344,7 +344,7 @@ struct PlaybackControlsSection: View {
                         .font(.system(size: 32, weight: .medium))
                         .foregroundColor(channelColor)
                     
-
+                    
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)

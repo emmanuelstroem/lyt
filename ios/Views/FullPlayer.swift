@@ -129,144 +129,144 @@ struct FullPlayerSheet: View {
                                     .shadow(radius: 20)
                             }
                         }
-                    
-                    // Channel Info
-                    VStack(spacing: 12) {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                if let track = serviceManager.currentTrack {
-                                    if track.isCurrentlyPlaying {
-                                        // Show channel-program as heading and track as subheading
-                                        let programTitle = serviceManager.getCurrentProgram(for: currentChannel)?.cleanTitle() ?? "Live"
-                                        VStack(alignment: .leading, spacing: 2) {
-                                            Text("\(currentChannel.title) - \(programTitle)")
-                                                .font(.subheadline)
-                                                .fontWeight(.medium)
-                                                .foregroundColor(.white)
-                                                .lineLimit(1)
-                                            
-                                            Text(track.displayText)
-                                                .font(.caption)
-                                                .foregroundColor(.gray)
-                                                .lineLimit(1)
+                        
+                        // Channel Info
+                        VStack(spacing: 12) {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    if let track = serviceManager.currentTrack {
+                                        if track.isCurrentlyPlaying {
+                                            // Show channel-program as heading and track as subheading
+                                            let programTitle = serviceManager.getCurrentProgram(for: currentChannel)?.cleanTitle() ?? "Live"
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text("\(currentChannel.title) - \(programTitle)")
+                                                    .font(.subheadline)
+                                                    .fontWeight(.medium)
+                                                    .foregroundColor(.white)
+                                                    .lineLimit(1)
+                                                
+                                                Text(track.displayText)
+                                                    .font(.caption)
+                                                    .foregroundColor(.gray)
+                                                    .lineLimit(1)
+                                            }
+                                        } else {
+                                            // Show channel as heading and program as subheading
+                                            let programTitle = serviceManager.getCurrentProgram(for: currentChannel)?.cleanTitle() ?? "Live"
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text(currentChannel.title)
+                                                    .font(.subheadline)
+                                                    .fontWeight(.medium)
+                                                    .foregroundColor(.white)
+                                                    .lineLimit(1)
+                                                
+                                                Text(programTitle)
+                                                    .font(.caption)
+                                                    .foregroundColor(.gray)
+                                                    .lineLimit(1)
+                                            }
                                         }
+                                    } else if let currentProgram = serviceManager.getCurrentProgram(for: currentChannel) {
+                                        Text(currentChannel.title)
+                                            .font(.title2)
+                                            .fontWeight(.bold)
+                                            .foregroundColor(.white)
+                                        
+                                        Text(currentProgram.cleanTitle())
+                                            .font(.subheadline)
+                                            .foregroundColor(.gray)
+                                            .lineLimit(1)
                                     } else {
-                                        // Show channel as heading and program as subheading
-                                        let programTitle = serviceManager.getCurrentProgram(for: currentChannel)?.cleanTitle() ?? "Live"
-                                        VStack(alignment: .leading, spacing: 2) {
-                                            Text(currentChannel.title)
-                                                .font(.subheadline)
-                                                .fontWeight(.medium)
-                                                .foregroundColor(.white)
-                                                .lineLimit(1)
-                                            
-                                            Text(programTitle)
-                                                .font(.caption)
-                                                .foregroundColor(.gray)
-                                                .lineLimit(1)
-                                        }
+                                        Text("DR Radio Channel")
+                                            .font(.subheadline)
+                                            .foregroundColor(.gray)
                                     }
-                                } else if let currentProgram = serviceManager.getCurrentProgram(for: currentChannel) {
-                                    Text(currentChannel.title)
-                                    .font(.title2)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.white)
-                                    
-                                    Text(currentProgram.cleanTitle())
-                                        .font(.subheadline)
-                                        .foregroundColor(.gray)
-                                        .lineLimit(1)
-                                } else {
-                                    Text("DR Radio Channel")
-                                        .font(.subheadline)
-                                        .foregroundColor(.gray)
                                 }
-                            }
-                            
-                            Spacer()
-                            
-                            // Live indicator
-                            HStack(spacing: 8) {
-                                Circle()
-                                    .fill(Color.red)
-                                    .frame(width: 8, height: 8)
                                 
-                                Text("LIVE")
-                                    .font(.caption)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.red)
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                    
-                    // Progress Bar (for live radio, this could show time since start)
-                    VStack(spacing: 8) {
-                        HStack {
-                            Text("Live")
-                                .font(.caption)
-                                .foregroundColor(.gray)
-                            
-                            Spacer()
-                            
-                            Text("24/7")
-                                .font(.caption)
-                                .foregroundColor(.gray)
-                        }
-                        
-                        ProgressView(value: currentTime, total: totalTime)
-                            .progressViewStyle(LinearProgressViewStyle(tint: .purple))
-                            .scaleEffect(y: 2)
-                    }
-                    .padding(.horizontal, 20)
-                    
-                    // Main Controls
-                    VStack(spacing: 24) {
-                        // Play Controls with Skip Buttons
-                        HStack(spacing: 40) {
-                            // Skip back button
-                            Button(action: {
-                                // Skip back 30 seconds (go to live for live radio)
-                                serviceManager.audioPlayer.skipBackward(by: 30)
-                            }) {
-                                Image(systemName: "gobackward.30")
-                                    .font(.system(size: 24, weight: .medium))
-                                    .foregroundColor(.gray)
-                            }
-                            
-                            // Play/Pause Button
-                            Button(action: {
-                                if let playingChannel = serviceManager.playingChannel {
-                                    serviceManager.togglePlayback(for: playingChannel)
+                                Spacer()
+                                
+                                // Live indicator
+                                HStack(spacing: 8) {
+                                    Circle()
+                                        .fill(Color.red)
+                                        .frame(width: 8, height: 8)
+                                    
+                                    Text("LIVE")
+                                        .font(.caption)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.red)
                                 }
-                            }) {
-                                Image(systemName: serviceManager.isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                                    .font(.system(size: 80, weight: .medium))
-                                    .foregroundColor(.purple)
                             }
-                            
-                            // Skip forward button
-                            Button(action: {
-                                // Skip forward (go to live for live radio)
-                                serviceManager.audioPlayer.skipForward()
-                            }) {
-                                Image(systemName: "goforward.plus")
-                                    .font(.system(size: 24, weight: .medium))
+                        }
+                        .padding(.horizontal, 20)
+                        
+                        // Progress Bar (for live radio, this could show time since start)
+                        VStack(spacing: 8) {
+                            HStack {
+                                Text("Live")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                                
+                                Spacer()
+                                
+                                Text("24/7")
+                                    .font(.caption)
                                     .foregroundColor(.gray)
                             }
+                            
+                            ProgressView(value: currentTime, total: totalTime)
+                                .progressViewStyle(LinearProgressViewStyle(tint: .purple))
+                                .scaleEffect(y: 2)
                         }
+                        .padding(.horizontal, 20)
                         
-                                                // Secondary Controls
-                        HStack(spacing: 24) {
-                            AirPlayButtonView(size: 48)
-                                .frame(width: 48, height: 48)
+                        // Main Controls
+                        VStack(spacing: 24) {
+                            // Play Controls with Skip Buttons
+                            HStack(spacing: 40) {
+                                // Skip back button
+                                Button(action: {
+                                    // Skip back 30 seconds (go to live for live radio)
+                                    serviceManager.audioPlayer.skipBackward(by: 30)
+                                }) {
+                                    Image(systemName: "gobackward.30")
+                                        .font(.system(size: 24, weight: .medium))
+                                        .foregroundColor(.gray)
+                                }
+                                
+                                // Play/Pause Button
+                                Button(action: {
+                                    if let playingChannel = serviceManager.playingChannel {
+                                        serviceManager.togglePlayback(for: playingChannel)
+                                    }
+                                }) {
+                                    Image(systemName: serviceManager.isPlaying ? "pause.circle.fill" : "play.circle.fill")
+                                        .font(.system(size: 80, weight: .medium))
+                                        .foregroundColor(.purple)
+                                }
+                                
+                                // Skip forward button
+                                Button(action: {
+                                    // Skip forward (go to live for live radio)
+                                    serviceManager.audioPlayer.skipForward()
+                                }) {
+                                    Image(systemName: "goforward.plus")
+                                        .font(.system(size: 24, weight: .medium))
+                                        .foregroundColor(.gray)
+                                }
+                            }
+                            
+                            // Secondary Controls
+                            HStack(spacing: 24) {
+                                AirPlayButtonView(size: 48)
+                                    .frame(width: 48, height: 48)
+                            }
                         }
+                        .padding(.horizontal, 20)
+                        
+                        Spacer()
                     }
-                    .padding(.horizontal, 20)
-                    
-                    Spacer()
-                }
-                .padding(.top, 40)
+                    .padding(.top, 40)
                 } else {
                     // No channel playing
                     VStack(spacing: 20) {

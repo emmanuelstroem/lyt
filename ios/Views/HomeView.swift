@@ -39,24 +39,24 @@ struct HomeView: View {
                             }
                         } else if serviceManager.availableChannels.isEmpty {
                             EmptyStateView()
-                                            } else {
-                        DRChannelsSection(
-                            serviceManager: serviceManager,
-                            onChannelTap: { channel in
-                                selectedChannel = channel
-                            }
-                        )
-                    }
-                    
-                    // Playback error alert
-                    if let playbackError = serviceManager.playbackError {
-                        PlaybackErrorAlert(
-                            error: playbackError,
-                            onDismiss: {
-                                serviceManager.clearPlaybackError()
-                            }
-                        )
-                    }
+                        } else {
+                            DRChannelsSection(
+                                serviceManager: serviceManager,
+                                onChannelTap: { channel in
+                                    selectedChannel = channel
+                                }
+                            )
+                        }
+                        
+                        // Playback error alert
+                        if let playbackError = serviceManager.playbackError {
+                            PlaybackErrorAlert(
+                                error: playbackError,
+                                onDismiss: {
+                                    serviceManager.clearPlaybackError()
+                                }
+                            )
+                        }
                     }
                     .padding(.horizontal, 16)
                     .padding(.bottom, 100) // Space for bottom tab bar
@@ -267,10 +267,10 @@ struct DRChannelCard: View {
         for word in words {
             let lowercased = word.lowercased()
             if lowercased.contains("hovedstaden") || lowercased.contains("capital") ||
-               lowercased.contains("syddanmark") || lowercased.contains("south") ||
-               lowercased.contains("midtjylland") || lowercased.contains("central") ||
-               lowercased.contains("nordjylland") || lowercased.contains("north") ||
-               lowercased.contains("sjælland") || lowercased.contains("zealand") {
+                lowercased.contains("syddanmark") || lowercased.contains("south") ||
+                lowercased.contains("midtjylland") || lowercased.contains("central") ||
+                lowercased.contains("nordjylland") || lowercased.contains("north") ||
+                lowercased.contains("sjælland") || lowercased.contains("zealand") {
                 return word
             }
         }
@@ -294,31 +294,31 @@ struct DRChannelCard: View {
     private var channelColor: Color {
         // DR Radio channel color themes
         switch channel.title.lowercased() {
-        case let title where title.contains("p1"):
-            return Color.orange // Dark Orange for P1
-        case let title where title.contains("p2"):
-            return Color.blue // Blue for P2
-        case let title where title.contains("p3"):
-            return Color.green // Neon Green for P3
-        case let title where title.contains("p4"):
-            return Color.yellow // Light Orange/Yellow for P4
-        case let title where title.contains("p5"):
-            return Color.pink // Pink for P5
-        case let title where title.contains("p6"):
-            return Color.gray // Gray for P6
-        case let title where title.contains("p8"):
-            return Color.purple // Purple for P8
-        default:
-            // Fallback to hash-based color for other channels
-            let hash = abs(channel.id.hashValue)
-            let hue = Double(hash % 360) / 360.0
-            let saturation = 0.7 + Double(hash % 20) / 100.0
-            let brightness = 0.8 + Double(hash % 20) / 100.0
-            return Color(hue: hue, saturation: saturation, brightness: brightness)
+            case let title where title.contains("p1"):
+                return Color.orange // Dark Orange for P1
+            case let title where title.contains("p2"):
+                return Color.blue // Blue for P2
+            case let title where title.contains("p3"):
+                return Color.green // Neon Green for P3
+            case let title where title.contains("p4"):
+                return Color.yellow // Light Orange/Yellow for P4
+            case let title where title.contains("p5"):
+                return Color.pink // Pink for P5
+            case let title where title.contains("p6"):
+                return Color.gray // Gray for P6
+            case let title where title.contains("p8"):
+                return Color.purple // Purple for P8
+            default:
+                // Fallback to hash-based color for other channels
+                let hash = abs(channel.id.hashValue)
+                let hue = Double(hash % 360) / 360.0
+                let saturation = 0.7 + Double(hash % 20) / 100.0
+                let brightness = 0.8 + Double(hash % 20) / 100.0
+                return Color(hue: hue, saturation: saturation, brightness: brightness)
         }
     }
     
-
+    
     
     var body: some View {
         ZStack {
@@ -409,9 +409,9 @@ struct DRChannelCard: View {
                     
                     Spacer()
                 }
-//                .frame(maxWidth: .infinity, alignment: .leading)
+                //                .frame(maxWidth: .infinity, alignment: .leading)
             }
-//            .padding(4)
+            //            .padding(4)
             .frame(width: 140, height: 80)
         }
         .frame(width: 140, height: 80)

@@ -146,7 +146,7 @@ struct ChannelDetailsSheet: View {
                         }
                         .padding(.horizontal, 20)
                         
-
+                        
                         
                         // Channel Description
                         VStack(alignment: .leading, spacing: 16) {
@@ -207,12 +207,12 @@ struct ChannelDetailsSheet: View {
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 20)
                                 .background(
-                                    RoundedRectangle(cornerRadius: 16)
+                                    Capsule()
                                         .fill(.ultraThinMaterial)
                                         .opacity(0.3)
                                 )
                                 .overlay(
-                                    RoundedRectangle(cornerRadius: 16)
+                                    Capsule()
                                         .stroke(Color.white.opacity(0.2), lineWidth: 1)
                                 )
                             }

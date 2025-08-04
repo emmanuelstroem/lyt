@@ -1,13 +1,13 @@
-//
-//  DRNetworkService.swift
-//  ios
-//
-//  Created by Emmanuel on 27/07/2025.
-//
+    //
+    //  DRNetworkService.swift
+    //  ios
+    //
+    //  Created by Emmanuel on 27/07/2025.
+    //
 
 import Foundation
 
-// MARK: - iOS DR Network Service
+    // MARK: - iOS DR Network Service
 
 class DRNetworkService {
     private let session: URLSession
@@ -26,7 +26,7 @@ class DRNetworkService {
         self.decoder.keyDecodingStrategy = .useDefaultKeys
     }
     
-    // MARK: - Fetch All Schedules
+        // MARK: - Fetch All Schedules
     func fetchAllSchedules() async throws -> [DREpisode] {
         let url = URL(string: DRAPIConfig.schedulesAllNow)!
         
@@ -46,11 +46,11 @@ class DRNetworkService {
         }
         
         do {
-            // Decode as DRScheduleItem array first
+                // Decode as DRScheduleItem array first
             let scheduleItems = try decoder.decode([DRScheduleItem].self, from: data)
             print("✅ Successfully fetched \(scheduleItems.count) schedule items")
             
-            // Convert to DREpisode objects
+                // Convert to DREpisode objects
             let episodes = scheduleItems.map { $0.toEpisode() }
             print("✅ Converted to \(episodes.count) episodes")
             
@@ -58,7 +58,7 @@ class DRNetworkService {
         } catch {
             print("❌ Decoding error: \(error)")
             
-            // Print the actual JSON response for debugging
+                // Print the actual JSON response for debugging
             if let jsonString = String(data: data, encoding: .utf8) {
                 print("📄 Raw JSON response (first 1000 chars):")
                 print(String(jsonString.prefix(1000)))
@@ -68,7 +68,7 @@ class DRNetworkService {
         }
     }
     
-    // MARK: - Fetch Schedule Snapshot for Channel
+        // MARK: - Fetch Schedule Snapshot for Channel
     func fetchScheduleSnapshot(for channelSlug: String) async throws -> DRScheduleResponse {
         let url = URL(string: "\(DRAPIConfig.scheduleSnapshot)/\(channelSlug)")!
         
@@ -87,7 +87,7 @@ class DRNetworkService {
             throw NetworkError.invalidResponse
         }
         
-        // Print the actual JSON response for debugging
+            // Print the actual JSON response for debugging
         if let jsonString = String(data: data, encoding: .utf8) {
             print("📄 Raw JSON response (first 2000 chars):")
             print(String(jsonString.prefix(2000)))
@@ -97,7 +97,7 @@ class DRNetworkService {
             let schedule = try decoder.decode(DRScheduleResponse.self, from: data)
             print("✅ Successfully fetched schedule for \(channelSlug) with \(schedule.items.count) items")
             
-            // Debug: Print details about the first item if available
+                // Debug: Print details about the first item if available
             if let firstItem = schedule.items.first {
                 print("📋 First item details:")
                 print("   - Title: \(firstItem.title)")
@@ -107,7 +107,7 @@ class DRNetworkService {
                 print("   - Image assets count: \(firstItem.imageAssets?.count ?? 0)")
                 print("   - Stream URL: \(firstItem.streamURL ?? "None")")
                 
-                // Debug audio assets
+                    // Debug audio assets
                 if let audioAssets = firstItem.audioAssets {
                     print("   - Audio assets details:")
                     for (index, asset) in audioAssets.enumerated() {
@@ -120,19 +120,19 @@ class DRNetworkService {
         } catch {
             print("❌ Decoding error: \(error)")
             
-            // Print detailed decoding error information
+                // Print detailed decoding error information
             if let decodingError = error as? DecodingError {
                 switch decodingError {
-                case .keyNotFound(let key, let context):
-                    print("❌ Missing key: \(key.stringValue) at path: \(context.codingPath)")
-                case .typeMismatch(let type, let context):
-                    print("❌ Type mismatch: expected \(type) at path: \(context.codingPath)")
-                case .valueNotFound(let type, let context):
-                    print("❌ Value not found: expected \(type) at path: \(context.codingPath)")
-                case .dataCorrupted(let context):
-                    print("❌ Data corrupted at path: \(context.codingPath)")
-                @unknown default:
-                    print("❌ Unknown decoding error")
+                    case .keyNotFound(let key, let context):
+                        print("❌ Missing key: \(key.stringValue) at path: \(context.codingPath)")
+                    case .typeMismatch(let type, let context):
+                        print("❌ Type mismatch: expected \(type) at path: \(context.codingPath)")
+                    case .valueNotFound(let type, let context):
+                        print("❌ Value not found: expected \(type) at path: \(context.codingPath)")
+                    case .dataCorrupted(let context):
+                        print("❌ Data corrupted at path: \(context.codingPath)")
+                    @unknown default:
+                        print("❌ Unknown decoding error")
                 }
             }
             
@@ -140,7 +140,7 @@ class DRNetworkService {
         }
     }
     
-    // MARK: - Fetch Index Points (Currently Playing Tracks)
+        // MARK: - Fetch Index Points (Currently Playing Tracks)
     func fetchIndexPoints(for channelSlug: String) async throws -> DRIndexPointsResponse {
         let url = URL(string: "\(DRAPIConfig.indexpointsLive)/\(channelSlug)")!
         
@@ -169,7 +169,7 @@ class DRNetworkService {
         }
     }
     
-    // MARK: - Fetch Image Data
+        // MARK: - Fetch Image Data
     func fetchImageData(from urlString: String) async throws -> Data {
         guard let url = URL(string: urlString) else {
             throw NetworkError.invalidURL
@@ -189,7 +189,7 @@ class DRNetworkService {
     }
 }
 
-// MARK: - Network Error
+    // MARK: - Network Error
 
 enum NetworkError: Error, LocalizedError {
     case invalidResponse
@@ -201,18 +201,18 @@ enum NetworkError: Error, LocalizedError {
     
     var errorDescription: String? {
         switch self {
-        case .invalidResponse:
-            return "Invalid response from server"
-        case .invalidData:
-            return "Invalid data received"
-        case .decodingError:
-            return "Failed to decode response"
-        case .invalidURL:
-            return "Invalid URL"
-        case .noInternetConnection:
-            return "No internet connection"
-        case .serverError:
-            return "Server error"
+            case .invalidResponse:
+                return "Invalid response from server"
+            case .invalidData:
+                return "Invalid data received"
+            case .decodingError:
+                return "Failed to decode response"
+            case .invalidURL:
+                return "Invalid URL"
+            case .noInternetConnection:
+                return "No internet connection"
+            case .serverError:
+                return "Server error"
         }
     }
 } 

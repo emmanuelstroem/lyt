@@ -37,7 +37,7 @@ struct AirPlayButton: UIViewRepresentable {
         let buttonSize = max(size, 44)
         view.frame = CGRect(x: 0, y: 0, width: buttonSize, height: buttonSize)
         
-
+        
         
         return view
     }
@@ -164,4 +164,4 @@ struct AirPlayButtonView: View {
         AirPlayButtonView(size: 32)
     }
     .padding()
-} 
+}
