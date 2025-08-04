@@ -282,7 +282,6 @@ struct GroupedChannelCard: View {
     
     var body: some View {
         Button(action: {
-            print("Button tapped for channel: \(primaryChannel.title)")
             if groupedChannel.hasMultipleDistricts {
                 showingDistrictSheet = true
             } else {

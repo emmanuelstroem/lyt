@@ -33,7 +33,9 @@ struct ContentView: View {
                 .tabBarMinimizeBehavior(.onScrollDown)
                 .accentColor(.purple)
                 .tabViewBottomAccessory {
-                    MiniPlayer(serviceManager: serviceManager, selectionState: selectionState)
+                    MiniPlayer()
+                        .environmentObject(serviceManager)
+                        .environmentObject(selectionState)
                 }
             } else {
                 // Fallback on earlier versions
@@ -56,7 +58,9 @@ struct ContentView: View {
                 // MiniPlayer positioned above TabView
                 VStack {
                     Spacer()
-                    MiniPlayer(serviceManager: serviceManager, selectionState: selectionState)
+                    MiniPlayer()
+                        .environmentObject(serviceManager)
+                        .environmentObject(selectionState)
                 }
             }
         }

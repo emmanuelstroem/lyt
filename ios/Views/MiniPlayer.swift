@@ -40,8 +40,8 @@ struct MiniPlayerConfig {
 // MARK: - Shared Mini Player Components
 struct MiniPlayerComponents: View {
     let playingChannel: DRChannel?
-    @ObservedObject var serviceManager: DRServiceManager
-    @ObservedObject var selectionState: SelectionState
+    @EnvironmentObject var serviceManager: DRServiceManager
+    @EnvironmentObject var selectionState: SelectionState
     let config: MiniPlayerConfig
     @State private var showingFullPlayer = false
     
@@ -52,9 +52,9 @@ struct MiniPlayerComponents: View {
                 if let playingChannel = playingChannel {
                     ChannelArtworkView(
                         playingChannel: playingChannel,
-                        serviceManager: serviceManager,
                         size: 36
                     )
+                    .environmentObject(serviceManager)
                     .clipShape(Capsule())
                 } else {
                     // Placeholder artwork for "Not Playing" state
@@ -182,31 +182,36 @@ struct MiniPlayerComponents: View {
 // MARK: - Main Mini Player
 
 struct MiniPlayer: View {
-    @ObservedObject var serviceManager: DRServiceManager
-    @ObservedObject var selectionState: SelectionState
-    
-    init(serviceManager: DRServiceManager, selectionState: SelectionState) {
-        self.serviceManager = serviceManager
-        self.selectionState = selectionState
-    }
+    @EnvironmentObject var serviceManager: DRServiceManager
+    @EnvironmentObject var selectionState: SelectionState
     
     var body: some View {
         if #available(iOS 26.0, *) {
-            LiquidGlassMiniPlayer(
-                playingChannel: serviceManager.playingChannel,
-                serviceManager: serviceManager,
-                selectionState: selectionState
-            )
+            LiquidGlassMiniPlayer()
+                .environmentObject(serviceManager)
+                .environmentObject(selectionState)
+
         } else {
             GeometryReader { geometry in
                 VStack {
                     Spacer()
                     MiniPlayerComponents(
                         playingChannel: serviceManager.playingChannel,
-                        serviceManager: serviceManager,
-                        selectionState: selectionState,
                         config: .full
                     )
+                    .environmentObject(serviceManager)
+                    .environmentObject(selectionState)
+                    .id(serviceManager.playingChannel?.id ?? "no-channel")
+                    .background(
+                        Capsule()
+                            .fill(.ultraThinMaterial)
+                            .opacity(0.9)
+                    )
+                    .overlay(
+                        Capsule()
+                            .stroke(.white.opacity(0.2), lineWidth: 1)
+                    )
+                    .padding(.horizontal, 16)
                     .padding(.bottom, geometry.safeAreaInsets.bottom + 25) // 25 is standard TabBar height
                 }
             }
@@ -217,30 +222,28 @@ struct MiniPlayer: View {
 // MARK: - LiquidGlass Mini Player (iOS 26+)
 @available(iOS 26.0, *)
 struct LiquidGlassMiniPlayer: View {
-    let playingChannel: DRChannel?
-    @ObservedObject var serviceManager: DRServiceManager
-    @ObservedObject var selectionState: SelectionState
+    @EnvironmentObject var serviceManager: DRServiceManager
+    @EnvironmentObject var selectionState: SelectionState
     @Environment(\.tabViewBottomAccessoryPlacement) private var placement
     
     var body: some View {
         switch placement {
             case .inline:
-                MiniPlayerComponents(
-                    playingChannel: playingChannel,
-                    serviceManager: serviceManager,
-                    selectionState: selectionState,
-                    config: MiniPlayerConfig(
-                        showAirPlayButton: false,
-                        showPlayPauseButton: true,
-                        showChannelInfo: true,
-                        showArtwork: true
+                                    MiniPlayerComponents(
+                        playingChannel: serviceManager.playingChannel,
+                        config: MiniPlayerConfig(
+                            showAirPlayButton: false,
+                            showPlayPauseButton: true,
+                            showChannelInfo: true,
+                            showArtwork: true
+                        )
                     )
-                )
+                    .environmentObject(serviceManager)
+                    .environmentObject(selectionState)
+                .id(serviceManager.playingChannel?.id ?? "no-channel")
             default:
                 MiniPlayerComponents(
-                    playingChannel: playingChannel,
-                    serviceManager: serviceManager,
-                    selectionState: selectionState,
+                    playingChannel: serviceManager.playingChannel,
                     config: MiniPlayerConfig(
                         showAirPlayButton: true,
                         showPlayPauseButton: true,
@@ -248,14 +251,18 @@ struct LiquidGlassMiniPlayer: View {
                         showArtwork: true
                     )
                 )
+                .environmentObject(serviceManager)
+                .environmentObject(selectionState)
+                .id(serviceManager.playingChannel?.id ?? "no-channel")
         }
     }
 }
 
 // MARK: - Shared Channel Artwork View
+// MARK: - Shared Channel Artwork View
 struct ChannelArtworkView: View {
     let playingChannel: DRChannel
-    @ObservedObject var serviceManager: DRServiceManager
+    @EnvironmentObject var serviceManager: DRServiceManager
     let size: CGFloat
     
     private var channelIcon: String {
@@ -312,11 +319,8 @@ struct ChannelArtworkView: View {
     }
 }
 
-
-
 #Preview {
-    MiniPlayer(
-        serviceManager: DRServiceManager(),
-        selectionState: SelectionState()
-    )
+    MiniPlayer()
+        .environmentObject(DRServiceManager())
+        .environmentObject(SelectionState())
 } 

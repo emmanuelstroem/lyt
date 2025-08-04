@@ -809,18 +809,13 @@ class DRServiceManager: ObservableObject {
         
         if let track = track, track.isCurrentlyPlaying, let endTime = track.endTime {
             // Track is currently playing - schedule poll when it ends
-            let timeUntilEnd = endTime.timeIntervalSince(now) + DRAPIConfig.trackUpdateBuffer
             nextLivePollingTime = endTime.addingTimeInterval(DRAPIConfig.trackUpdateBuffer)
-            
-            print("🎵 Polling: Track '\(track.displayText)' playing, next poll in \(Int(timeUntilEnd))s")
             
             schedulePoll(at: nextLivePollingTime!, for: channel)
         } else {
             // No currently playing track - use trackPollingInterval
             let nextPollTime = now.addingTimeInterval(DRAPIConfig.trackPollingInterval)
             nextLivePollingTime = nextPollTime
-            
-            print("🎵 Polling: No track playing, next poll in \(Int(DRAPIConfig.trackPollingInterval))s")
             
             schedulePoll(at: nextPollTime, for: channel)
         }
@@ -835,8 +830,6 @@ class DRServiceManager: ObservableObject {
     private func preloadChannelImages(from schedules: [DREpisode]) async {
         // Use priority-based preloading for optimal performance
         imageCache.preloadImagesWithPriority(from: schedules)
-        
-        print("🖼️ Started priority-based image preloading for \(schedules.count) episodes")
     }
     
     /// Returns image cache statistics
@@ -847,7 +840,6 @@ class DRServiceManager: ObservableObject {
     /// Clears all cached images
     func clearImageCache() {
         imageCache.clearAllCaches()
-        print("🗑️ Image cache cleared")
     }
     
     private func schedulePoll(at time: Date, for channel: DRChannel) {
@@ -859,7 +851,6 @@ class DRServiceManager: ObservableObject {
             // Check if we should still poll (channel still playing)
             guard let playingChannel = self.playingChannel, playingChannel.id == channel.id else { return }
             
-            print("🎵 Polling: Fetching track data for \(channel.title)")
             Task { @MainActor in
                 await self.getCurrentTrack(for: channel)
             }

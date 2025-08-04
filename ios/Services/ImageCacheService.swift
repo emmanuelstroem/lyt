@@ -311,6 +311,7 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
     @StateObject private var imageCache = ImageCacheService.shared
     @State private var image: UIImage?
     @State private var isLoading = false
+    @State private var currentURL: String?
     
     init(url: URL?, @ViewBuilder content: @escaping (Image) -> Content, @ViewBuilder placeholder: @escaping () -> Placeholder) {
         self.url = url
@@ -331,15 +332,25 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
                     }
             }
         }
+        .onChange(of: url?.absoluteString) { _ in
+            loadImage()
+        }
     }
     
     private func loadImage() {
-        guard let url = url, image == nil, !isLoading else { return }
+        guard let url = url, !isLoading else { return }
+        
+        // Check if URL has changed
+        let urlString = url.absoluteString
+        if currentURL == urlString && image != nil {
+            return // URL hasn't changed and we already have an image
+        }
         
         isLoading = true
+        currentURL = urlString
         
         Task {
-            let loadedImage = await imageCache.loadImage(from: url.absoluteString)
+            let loadedImage = await imageCache.loadImage(from: urlString)
             
             await MainActor.run {
                 self.image = loadedImage
