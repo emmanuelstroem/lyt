@@ -23,8 +23,8 @@ struct ContentView: View {
                         //     Text(id.description)
                         // }
                     }
-                    Tab("Radio", systemImage: "radio", value: 2) {
-                        //                            HomeView(serviceManager: serviceManager, selectionState: selectionState)
+                    Tab("Radio", systemImage: "antenna.radiowaves.left.and.right", value: 2) {
+                        RadioView(serviceManager: serviceManager, selectionState: selectionState)
                     }
                     Tab("Search", systemImage: "magnifyingglass", value: 1, role: .search) {
                         SearchView(serviceManager: serviceManager, selectionState: selectionState)

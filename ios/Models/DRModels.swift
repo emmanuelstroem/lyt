@@ -716,6 +716,10 @@ class DRServiceManager: ObservableObject {
         return channelPrograms.first { $0.isCurrentlyPlaying } ?? channelPrograms.first
     }
     
+    func getCachedPrograms(for channel: DRChannel) -> [DREpisode] {
+        return cachedSchedules.filter { $0.channel.id == channel.id }
+    }
+    
     func getCurrentTrack(for channel: DRChannel) async -> DRTrack? {
         do {
             let indexPoints = try await networkService.fetchIndexPoints(for: channel.slug)
