@@ -56,6 +56,16 @@ struct MiniPlayerComponents: View {
                     )
                     .environmentObject(serviceManager)
                     .clipShape(Capsule())
+                } else if let lastPlayedChannel = serviceManager.userPreferences.lastPlayedChannel,
+                          serviceManager.findLastPlayedChannel(in: serviceManager.availableChannels) != nil {
+                    // Show last played channel artwork
+                    ChannelArtworkView(
+                        playingChannel: lastPlayedChannel,
+                        size: 36
+                    )
+                    .environmentObject(serviceManager)
+                    .clipShape(Capsule())
+                    .opacity(0.7) // Slightly dimmed to indicate not currently playing
                 } else {
                     // Placeholder artwork for "Not Playing" state
                     Capsule()
@@ -126,16 +136,34 @@ struct MiniPlayerComponents: View {
                                 .lineLimit(1)
                         }
                     } else {
-                        // "Not Playing" state
-                        Text("Not Playing")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(.white)
-                            .lineLimit(1)
-                        
-                        Text(serviceManager.availableChannels.isEmpty ? "No channels available" : "Tap play to start")
-                            .font(.system(size: 11, weight: .regular))
-                            .foregroundColor(.gray)
-                            .lineLimit(1)
+                        // Show last played channel if available, otherwise "Not Playing" state
+                        if let lastPlayedChannel = serviceManager.userPreferences.lastPlayedChannel,
+                           serviceManager.findLastPlayedChannel(in: serviceManager.availableChannels) != nil {
+                            // Show last played channel info
+                            let programTitle = serviceManager.getCurrentProgram(for: lastPlayedChannel)?.cleanTitle() ?? "Live"
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(lastPlayedChannel.title)
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundColor(.white)
+                                    .lineLimit(1)
+                                
+                                Text(programTitle)
+                                    .font(.system(size: 11, weight: .regular))
+                                    .foregroundColor(.gray)
+                                    .lineLimit(1)
+                            }
+                        } else {
+                            // "Not Playing" state
+                            Text("Not Playing")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(.white)
+                                .lineLimit(1)
+                            
+                            Text(serviceManager.availableChannels.isEmpty ? "No channels available" : "Tap play to start")
+                                .font(.system(size: 11, weight: .regular))
+                                .foregroundColor(.gray)
+                                .lineLimit(1)
+                        }
                     }
                 }
             }
@@ -154,6 +182,10 @@ struct MiniPlayerComponents: View {
                     Button(action: {
                         if let playingChannel = playingChannel {
                             serviceManager.togglePlayback(for: playingChannel)
+                        } else if let lastPlayedChannel = serviceManager.userPreferences.lastPlayedChannel,
+                                  serviceManager.findLastPlayedChannel(in: serviceManager.availableChannels) != nil {
+                            // Resume the last played channel
+                            serviceManager.playChannel(lastPlayedChannel)
                         } else if let firstChannel = serviceManager.availableChannels.first {
                             // Play the first channel when nothing is currently playing
                             serviceManager.playChannel(firstChannel)

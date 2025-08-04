@@ -560,6 +560,7 @@ class DRServiceManager: ObservableObject {
     let audioPlayer = AudioPlayerService()
     private let networkService = DRNetworkService()
     private let imageCache = ImageCacheService.shared
+    let userPreferences = UserPreferencesService()
     private var cancellables = Set<AnyCancellable>()
     
     // Caching properties
@@ -612,6 +613,9 @@ class DRServiceManager: ObservableObject {
                     self.lastSchedulesUpdate = Date()
                     self.availableChannels = channels
                     self.isLoading = false
+                    
+                    // Restore last played channel if available and recent
+                    self.restoreLastPlayedChannel()
                 }
                 
                 // Preload images for all channels
@@ -711,6 +715,9 @@ class DRServiceManager: ObservableObject {
                 self.playingChannel = channel
                 self.audioPlayer.play(url: url)
                 
+                // Save the last played channel
+                self.userPreferences.saveLastPlayedChannel(channel)
+                
                 // Update Command Center with channel and program info
                 let currentProgram = self.getCurrentProgram(for: channel)
                 self.audioPlayer.updateCommandCenterInfo(channel: channel, program: currentProgram, track: self.currentTrack)
@@ -729,6 +736,33 @@ class DRServiceManager: ObservableObject {
     
     func getCachedPrograms(for channel: DRChannel) -> [DREpisode] {
         return cachedSchedules.filter { $0.channel.id == channel.id }
+    }
+    
+    // MARK: - Last Played Channel Management
+    
+    private func restoreLastPlayedChannel() {
+        // Only restore if we have available channels and no current playback
+        guard !availableChannels.isEmpty && playingChannel == nil else { return }
+        
+        // Find the last played channel in available channels
+        if let lastPlayedChannel = userPreferences.findLastPlayedChannel(in: availableChannels) {
+            // Only restore if it was played recently (within 24 hours)
+            if userPreferences.isLastPlayedRecent(within: 24) {
+                // Set the playing channel but don't start playback automatically
+                // This will populate the mini player with the last played channel
+                playingChannel = lastPlayedChannel
+                
+                // Get current program for the restored channel
+                currentLiveProgram = getCurrentProgram(for: lastPlayedChannel)
+                
+                // Update Command Center with restored channel info
+                audioPlayer.updateCommandCenterInfo(channel: lastPlayedChannel, program: currentLiveProgram, track: currentTrack)
+            }
+        }
+    }
+    
+    func findLastPlayedChannel(in channels: [DRChannel]) -> DRChannel? {
+        return userPreferences.findLastPlayedChannel(in: channels)
     }
     
     func getCurrentTrack(for channel: DRChannel) async -> DRTrack? {

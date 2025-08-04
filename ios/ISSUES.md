@@ -4,6 +4,7 @@
 
 ### High Priority
 - [x] Audio playback doesn't resume after interruption (alarm, phone call, etc.) - FIXED
+- [x] Mini player doesn't show last played channel on app restart - FIXED
 - [ ] Need to implement proper error handling for network failures
 - [ ] Missing loading states during API calls
 - [ ] No offline fallback when network is unavailable

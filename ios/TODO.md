@@ -3,6 +3,7 @@
 ## Immediate Tasks (Next Sprint)
 
 ### Core Features
+- [x] Save and restore last played channel in mini player
 - [ ] Implement proper error handling and user feedback
 - [ ] Add loading indicators for all network operations
 - [ ] Create offline mode with cached data
