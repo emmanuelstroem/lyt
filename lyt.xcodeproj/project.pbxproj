@@ -97,7 +97,7 @@
 		14BA0BB22E36B00900D8C95E /* macos.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = macos.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		14BA0BBF2E36B00A00D8C95E /* macosTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = macosTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		14BA0BC92E36B00A00D8C95E /* macosUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = macosUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		14BA0BDE2E36B02D00D8C95E /* ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ios.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		14BA0BDE2E36B02D00D8C95E /* Lyt.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Lyt.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		14BA0BEA2E36B02F00D8C95E /* iosTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iosTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		14BA0BF42E36B02F00D8C95E /* iosUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iosUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		14BA0C092E36B07700D8C95E /* tvos.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = tvos.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -347,7 +347,7 @@
 				14BA0BB22E36B00900D8C95E /* macos.app */,
 				14BA0BBF2E36B00A00D8C95E /* macosTests.xctest */,
 				14BA0BC92E36B00A00D8C95E /* macosUITests.xctest */,
-				14BA0BDE2E36B02D00D8C95E /* ios.app */,
+				14BA0BDE2E36B02D00D8C95E /* Lyt.app */,
 				14BA0BEA2E36B02F00D8C95E /* iosTests.xctest */,
 				14BA0BF42E36B02F00D8C95E /* iosUITests.xctest */,
 				14BA0C092E36B07700D8C95E /* tvos.app */,
@@ -547,7 +547,7 @@
 			packageProductDependencies = (
 			);
 			productName = ios;
-			productReference = 14BA0BDE2E36B02D00D8C95E /* ios.app */;
+			productReference = 14BA0BDE2E36B02D00D8C95E /* Lyt.app */;
 			productType = "com.apple.product-type.application";
 		};
 		14BA0BE92E36B02F00D8C95E /* iosTests */ = {
@@ -1636,7 +1636,7 @@
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.eopio.lyt.ios;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = Lyt;
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator watchos watchsimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -1670,7 +1670,7 @@
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.eopio.lyt.ios;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = Lyt;
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator watchos watchsimulator";
 				SUPPORTS_MACCATALYST = NO;
