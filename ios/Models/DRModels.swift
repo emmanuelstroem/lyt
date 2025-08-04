@@ -40,6 +40,17 @@ struct DRChannel: Identifiable, Codable, Equatable, Hashable {
     
     var displayName: String { title }
     
+    // Computed properties for name and district
+    var name: String {
+        let components = title.split(separator: " ", maxSplits: 1, omittingEmptySubsequences: false)
+        return components.first.map(String.init) ?? title
+    }
+    
+    var district: String? {
+        let components = title.split(separator: " ", maxSplits: 1, omittingEmptySubsequences: false)
+        return components.count > 1 ? String(components[1]) : nil
+    }
+    
     // Hashable conformance
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)

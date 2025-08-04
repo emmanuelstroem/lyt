@@ -252,44 +252,7 @@ struct DRChannelCard: View {
         return String(cleanTitle.prefix(4))
     }
     
-    // Helper function to extract region from channel title
-    private func extractRegion(from title: String) -> String? {
-        // Remove common DR prefixes
-        let cleanTitle = title
-            .replacingOccurrences(of: "DR ", with: "")
-            .replacingOccurrences(of: "DR-", with: "")
-            .replacingOccurrences(of: "DR_", with: "")
-        
-        // Split by spaces and look for region indicators
-        let words = cleanTitle.components(separatedBy: .whitespaces)
-        
-        // Look for common region patterns
-        for word in words {
-            let lowercased = word.lowercased()
-            if lowercased.contains("hovedstaden") || lowercased.contains("capital") ||
-                lowercased.contains("syddanmark") || lowercased.contains("south") ||
-                lowercased.contains("midtjylland") || lowercased.contains("central") ||
-                lowercased.contains("nordjylland") || lowercased.contains("north") ||
-                lowercased.contains("sjælland") || lowercased.contains("zealand") {
-                return word
-            }
-        }
-        
-        // For national channels, return "DR" as the region
-        if title.contains("DR P") {
-            return "DR"
-        }
-        
-        // If no specific region found, return the second word if it exists and isn't just a number
-        if words.count > 1 {
-            let secondWord = words[1]
-            if secondWord.matches(of: /^P\d+$/).count == 0 && secondWord.count > 2 {
-                return secondWord
-            }
-        }
-        
-        return nil
-    }
+
     
     private var channelColor: Color {
         // DR Radio channel color themes
@@ -391,15 +354,15 @@ struct DRChannelCard: View {
                 HStack(alignment: .bottom, spacing: 4) {
                     // Channel title in square view
                     KnockoutTextView(
-                        text: extractChannelName(from: channel.title), 
+                        text: extractChannelName(from: channel.name),
                         backgroundColor: channelColor
                     )
                     .frame(width: 40, height: 40)
                     .cornerRadius(6)
                     
                     // Region text inline with channel title
-                    if let region = extractRegion(from: channel.title) {
-                        Text(" \(region)")
+                    if let district = channel.district {
+                        Text(" \(district)")
                             .font(.system(size: 12, weight: .medium))
                             .foregroundColor(channelColor)
                             .lineLimit(1)
