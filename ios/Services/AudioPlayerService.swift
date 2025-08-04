@@ -413,7 +413,7 @@ class AudioPlayerService: NSObject, ObservableObject {
                 // Silent error handling
         }
         
-            // Update Command Center playback state
+        // Update Command Center playback state
         updateCommandCenterPlaybackState()
     }
     

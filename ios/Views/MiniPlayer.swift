@@ -195,33 +195,19 @@ struct MiniPlayer: View {
                 selectionState: selectionState
             )
         } else {
-            MiniPlayerComponents(
-                playingChannel: serviceManager.playingChannel,
-                serviceManager: serviceManager,
-                selectionState: selectionState,
-                config: .full
-            )
+            GeometryReader { geometry in
+                VStack {
+                    Spacer()
+                    MiniPlayerComponents(
+                        playingChannel: serviceManager.playingChannel,
+                        serviceManager: serviceManager,
+                        selectionState: selectionState,
+                        config: .full
+                    )
+                    .padding(.bottom, geometry.safeAreaInsets.bottom + 25) // 25 is standard TabBar height
+                }
+            }
         }
-    }
-}
-
-
-
-
-
-// MARK: - Minimized Mini Player Content (No AirPlay Button)
-struct MiniPlayerMinimized: View {
-    let playingChannel: DRChannel?
-    @ObservedObject var serviceManager: DRServiceManager
-    @ObservedObject var selectionState: SelectionState
-    
-    var body: some View {
-        MiniPlayerComponents(
-            playingChannel: playingChannel,
-            serviceManager: serviceManager,
-            selectionState: selectionState,
-            config: .minimized
-        )
     }
 }
 
