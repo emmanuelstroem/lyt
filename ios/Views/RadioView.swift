@@ -13,12 +13,20 @@ struct RadioView: View {
     @State private var searchText = ""
     @State private var isLoading = false
     
-    var filteredChannels: [DRChannel] {
+    var filteredGroupedChannels: [GroupedChannel] {
+        let channels = serviceManager.availableChannels
+        let grouped = Dictionary(grouping: channels) { $0.name }
+        let groupedChannels = grouped.values.map { GroupedChannel(channels: $0) }
+            .sorted { $0.name < $1.name }
+        
         if searchText.isEmpty {
-            return serviceManager.availableChannels
+            return groupedChannels
         } else {
-            return serviceManager.availableChannels.filter { channel in
-                channel.displayName.localizedCaseInsensitiveContains(searchText)
+            return groupedChannels.filter { groupedChannel in
+                groupedChannel.name.localizedCaseInsensitiveContains(searchText) ||
+                groupedChannel.channels.contains { channel in
+                    channel.displayName.localizedCaseInsensitiveContains(searchText)
+                }
             }
         }
     }
@@ -51,21 +59,21 @@ struct RadioView: View {
                         ErrorView(error: error) {
                             serviceManager.loadChannels()
                         }
-                    } else if filteredChannels.isEmpty {
+                    } else if filteredGroupedChannels.isEmpty {
                         EmptyStateView()
                     } else {
                         ScrollView {
                             LazyVStack(spacing: 12) {
-                                ForEach(filteredChannels) { channel in
-                                                                    RadioChannelCard(
-                                    channel: channel,
-                                    serviceManager: serviceManager,
-                                    onTap: {
-                                        // Start streaming the channel
-                                        serviceManager.playChannel(channel)
-                                        selectionState.selectChannel(channel, showSheet: false)
-                                    }
-                                )
+                                ForEach(filteredGroupedChannels) { groupedChannel in
+                                    GroupedRadioChannelCard(
+                                        groupedChannel: groupedChannel,
+                                        serviceManager: serviceManager,
+                                        onTap: { channel in
+                                            // Start streaming the channel
+                                            serviceManager.playChannel(channel)
+                                            selectionState.selectChannel(channel, showSheet: false)
+                                        }
+                                    )
                                 }
                             }
                             .padding(.horizontal, 16)
@@ -86,30 +94,38 @@ struct RadioView: View {
     }
 }
 
-// MARK: - Radio Channel Card
 
-struct RadioChannelCard: View {
-    let channel: DRChannel
+
+// MARK: - Grouped Radio Channel Card
+struct GroupedRadioChannelCard: View {
+    let groupedChannel: GroupedChannel
     let serviceManager: DRServiceManager
-    let onTap: () -> Void
+    let onTap: (DRChannel) -> Void
     
     @State private var isPressed = false
-    @State private var currentProgram: DREpisode?
-    @State private var currentTrack: DRTrack?
+    @State private var showingDistrictSheet = false
+    
+    private var primaryChannel: DRChannel {
+        return groupedChannel.channels.first!
+    }
     
     private var channelColor: Color {
         // Generate a consistent color based on channel ID
-        let hash = abs(channel.id.hashValue)
+        let hash = abs(primaryChannel.id.hashValue)
         let hue = Double(hash % 360) / 360.0
         let saturation = 0.6 + Double(hash % 20) / 100.0
         let brightness = 0.7 + Double(hash % 20) / 100.0
         return Color(hue: hue, saturation: saturation, brightness: brightness)
     }
     
-
-    
     var body: some View {
-        Button(role: .none, action: onTap) {
+        Button(role: .none, action: {
+            if groupedChannel.hasMultipleDistricts {
+                showingDistrictSheet = true
+            } else {
+                onTap(primaryChannel)
+            }
+        }) {
             HStack(spacing: 16) {
                 // Channel artwork with real image or fallback
                 AsyncImage(url: getChannelImageURL()) { image in
@@ -135,18 +151,36 @@ struct RadioChannelCard: View {
                         .frame(width: 60, height: 60)
                         .shadow(color: channelColor.opacity(0.3), radius: 4, x: 0, y: 2)
                         .overlay {
-                            Image(systemName: "antenna.radiowaves.left.and.right")
-                                .font(.system(size: 24, weight: .medium))
-                                .foregroundColor(.white)
+                            // Channel title in square view with KnockoutTextView
+                            KnockoutTextView(
+                                text: groupedChannel.name,
+                                backgroundColor: channelColor
+                            )
+                            .frame(width: 40, height: 40)
+                            .cornerRadius(8)
                         }
                 }
                 
                 // Channel info
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(channel.displayName)
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .lineLimit(1)
+                    HStack {
+                        Text(groupedChannel.name)
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .lineLimit(1)
+                        
+                        if groupedChannel.hasMultipleDistricts {
+                            HStack(spacing: 4) {
+                                Text("(\(groupedChannel.districts.count))")
+                                    .font(.caption)
+                                    .foregroundColor(channelColor)
+                                
+                                Image(systemName: "chevron.down")
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundColor(channelColor)
+                            }
+                        }
+                    }
                     
                     // Show current program or track info
                     if let program = getCurrentProgram() {
@@ -160,7 +194,7 @@ struct RadioChannelCard: View {
                             .foregroundColor(.gray)
                             .lineLimit(1)
                     } else {
-                        Text(channel.type.capitalized)
+                        Text(primaryChannel.type.capitalized)
                             .font(.caption)
                             .foregroundColor(.gray)
                             .lineLimit(1)
@@ -182,8 +216,11 @@ struct RadioChannelCard: View {
         .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { pressing in
             isPressed = pressing
         }, perform: {})
-        .onAppear {
-            loadChannelData()
+        .sheet(isPresented: $showingDistrictSheet) {
+            DistrictSelectionSheet(
+                groupedChannel: groupedChannel,
+                onChannelSelect: onTap
+            )
         }
     }
     
@@ -197,7 +234,7 @@ struct RadioChannelCard: View {
         }
         
         // Try to get image from any cached program for this channel
-        let channelPrograms = serviceManager.getCachedPrograms(for: channel)
+        let channelPrograms = serviceManager.getCachedPrograms(for: primaryChannel)
         if let programWithImage = channelPrograms.first(where: { $0.primaryImageURL != nil }),
            let imageURLString = programWithImage.primaryImageURL {
             return URL(string: imageURLString)
@@ -207,19 +244,17 @@ struct RadioChannelCard: View {
     }
     
     private func getCurrentProgram() -> DREpisode? {
-        return serviceManager.getCurrentProgram(for: channel)
+        return serviceManager.getCurrentProgram(for: primaryChannel)
     }
     
     private func getCurrentTrack() -> DRTrack? {
         return serviceManager.currentTrack
     }
-    
-    private func loadChannelData() {
-        // Load current program and track data for this channel
-        currentProgram = getCurrentProgram()
-        currentTrack = getCurrentTrack()
-    }
 }
+
+
+
+
 
 
 
@@ -230,4 +265,44 @@ struct RadioChannelCard: View {
         serviceManager: DRServiceManager(),
         selectionState: SelectionState()
     )
+}
+
+
+
+
+
+// MARK: - KnockoutTextView Components
+struct KnockoutTextView: View {
+    var text: String
+    var backgroundColor: Color = .blue
+    
+    var body: some View {
+        ZStack {
+            // Square with transparent text
+            TextMaskView(text: text, backgroundColor: backgroundColor)
+        }
+    }
+}
+
+struct TextMaskView: View {
+    var text: String
+    var backgroundColor: Color
+    
+    var body: some View {
+        // Solid color square
+        backgroundColor
+            .overlay {
+                // Transparent text mask
+                GeometryReader { geo in
+                    Text(text)
+                        .font(.system(size: geo.size.width * 0.6, weight: .black, design: .default))
+                        .minimumScaleFactor(0.1)
+                        .lineLimit(1)
+                        .frame(width: geo.size.width, height: geo.size.height)
+                        .foregroundColor(.black)
+                        .blendMode(.destinationOut) // Punch out the text
+                }
+            }
+            .compositingGroup() // Required for destinationOut to work properly
+    }
 } 
