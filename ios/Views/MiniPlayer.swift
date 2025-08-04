@@ -132,7 +132,7 @@ struct MiniPlayerComponents: View {
                             .foregroundColor(.white)
                             .lineLimit(1)
                         
-                        Text("Tap a channel to start")
+                        Text(serviceManager.availableChannels.isEmpty ? "No channels available" : "Tap play to start")
                             .font(.system(size: 11, weight: .regular))
                             .foregroundColor(.gray)
                             .lineLimit(1)
@@ -154,6 +154,9 @@ struct MiniPlayerComponents: View {
                     Button(action: {
                         if let playingChannel = playingChannel {
                             serviceManager.togglePlayback(for: playingChannel)
+                        } else if let firstChannel = serviceManager.availableChannels.first {
+                            // Play the first channel when nothing is currently playing
+                            serviceManager.playChannel(firstChannel)
                         }
                     }) {
                         Image(systemName: serviceManager.isPlaying ? "pause.fill" : "play.fill")
@@ -161,7 +164,7 @@ struct MiniPlayerComponents: View {
                             .foregroundColor(.white)
                             .frame(width: 32, height: 32)
                     }
-                    .disabled(playingChannel == nil)
+                    .disabled(playingChannel == nil && serviceManager.availableChannels.isEmpty)
                 }
             }
         }
