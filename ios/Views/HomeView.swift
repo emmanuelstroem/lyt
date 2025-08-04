@@ -10,7 +10,6 @@ import SwiftUI
 struct HomeView: View {
     @ObservedObject var serviceManager: DRServiceManager
     @ObservedObject var selectionState: SelectionState
-    @State private var selectedChannel: DRChannel?
     
     var body: some View {
         NavigationView {
@@ -43,7 +42,9 @@ struct HomeView: View {
                             DRChannelsSection(
                                 serviceManager: serviceManager,
                                 onChannelTap: { channel in
-                                    selectedChannel = channel
+                                    // Start streaming the channel
+                                    serviceManager.playChannel(channel)
+                                    selectionState.selectChannel(channel, showSheet: false)
                                 }
                             )
                         }
@@ -62,13 +63,6 @@ struct HomeView: View {
                     .padding(.bottom, 100) // Space for bottom tab bar
                 }
             }
-        }
-        .sheet(item: $selectedChannel) { channel in
-            ChannelDetailsSheet(
-                channel: channel,
-                serviceManager: serviceManager,
-                selectionState: selectionState
-            )
         }
     }
 }
