@@ -292,16 +292,14 @@ struct TextMaskView: View {
         // Solid color square
         backgroundColor
             .overlay {
-                // Transparent text mask
-                GeometryReader { geo in
-                    Text(text)
-                        .font(.system(size: geo.size.width * 0.6, weight: .black, design: .default))
-                        .minimumScaleFactor(0.1)
-                        .lineLimit(1)
-                        .frame(width: geo.size.width, height: geo.size.height)
-                        .foregroundColor(.black)
-                        .blendMode(.destinationOut) // Punch out the text
-                }
+                // Transparent text mask - using fixed size instead of GeometryReader
+                Text(text)
+                    .font(.system(size: 24, weight: .black, design: .default))
+                    .minimumScaleFactor(0.1)
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .foregroundColor(.black)
+                    .blendMode(.destinationOut) // Punch out the text
             }
             .compositingGroup() // Required for destinationOut to work properly
     }

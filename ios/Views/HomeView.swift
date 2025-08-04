@@ -220,29 +220,22 @@ struct DRChannelsSection: View {
                 Spacer()
             }
             
-            // Channels grid with horizontal scroll
-            ScrollView(.horizontal, showsIndicators: false) {
-                LazyHGrid(rows: [
-                    GridItem(.flexible(minimum: 80, maximum: 100)),
-                    GridItem(.flexible(minimum: 80, maximum: 100)),
-                    GridItem(.flexible(minimum: 80, maximum: 100))
-                ], spacing: 12) {
-                    ForEach(groupedChannels) { groupedChannel in
-                        GroupedChannelCard(
-                            groupedChannel: groupedChannel,
-                            serviceManager: serviceManager,
-                            onTap: onChannelTap
-                        )
-                    }
+            // Channels grid with responsive layout
+            LazyVGrid(columns: [
+                GridItem(.adaptive(minimum: 160, maximum: 200), spacing: 12)
+            ], spacing: 12) {
+                ForEach(groupedChannels) { groupedChannel in
+                    GroupedChannelCard(
+                        groupedChannel: groupedChannel,
+                        serviceManager: serviceManager,
+                        onTap: onChannelTap,
+                        cardWidth: 160,
+                        cardHeight: 100
+                    )
+                    .id(groupedChannel.id) // Ensure unique identification
                 }
-                .padding(.horizontal, 4)
             }
-            
-            // Channel count info
-            Text("\(serviceManager.availableChannels.count) channels available")
-                .font(.caption)
-                .foregroundColor(.gray)
-                .padding(.top, 8)
+            .padding(.horizontal, 4)
         }
     }
 }
@@ -252,6 +245,8 @@ struct GroupedChannelCard: View {
     let groupedChannel: GroupedChannel
     @ObservedObject var serviceManager: DRServiceManager
     let onTap: (DRChannel) -> Void
+    let cardWidth: CGFloat
+    let cardHeight: CGFloat
     @State private var showingDistrictSheet = false
     
     private var primaryChannel: DRChannel {
@@ -286,24 +281,47 @@ struct GroupedChannelCard: View {
     }
     
     var body: some View {
-        ZStack {
-            // Background image or gradient
-            if let currentProgram = serviceManager.getCurrentProgram(for: primaryChannel),
-               let imageURL = currentProgram.primaryImageURL,
-               let url = URL(string: imageURL) {
-                CachedAsyncImage(url: url) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 140, height: 80)
-                        .clipped()
-                        .blur(radius: 2)
-                        .overlay(
-                            // Dark overlay to reduce brightness
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.black.opacity(0.6))
-                        )
-                } placeholder: {
+        Button(action: {
+            print("Button tapped for channel: \(primaryChannel.title)")
+            if groupedChannel.hasMultipleDistricts {
+                showingDistrictSheet = true
+            } else {
+                onTap(primaryChannel)
+            }
+        }) {
+            ZStack {
+                // Background image or gradient
+                if let currentProgram = serviceManager.getCurrentProgram(for: primaryChannel),
+                   let imageURL = currentProgram.primaryImageURL,
+                   let url = URL(string: imageURL) {
+                    CachedAsyncImage(url: url) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: cardWidth, height: cardHeight)
+                            .clipped()
+                            .blur(radius: 2)
+                            .overlay(
+                                // Dark overlay to reduce brightness
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(Color.black.opacity(0.6))
+                            )
+                    } placeholder: {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(
+                                LinearGradient(
+                                    colors: [
+                                        channelColor.opacity(0.7),
+                                        channelColor.opacity(0.5),
+                                        channelColor.opacity(0.3)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: cardWidth, height: cardHeight)
+                    }
+                } else {
                     RoundedRectangle(cornerRadius: 12)
                         .fill(
                             LinearGradient(
@@ -316,74 +334,57 @@ struct GroupedChannelCard: View {
                                 endPoint: .bottomTrailing
                             )
                         )
-                        .frame(width: 140, height: 80)
+                        .frame(width: cardWidth, height: cardHeight)
                 }
-            } else {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                channelColor.opacity(0.7),
-                                channelColor.opacity(0.5),
-                                channelColor.opacity(0.3)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 140, height: 80)
-            }
-            
-            // Content overlay
-            VStack(alignment: .leading, spacing: 4) {
-                Spacer()
                 
-                HStack {
-                    // Channel name and district indicator
-                    HStack(alignment: .bottom, spacing: 2) {
-                        // Channel title in square view with KnockoutTextView
-                        KnockoutTextView(
-                            text: groupedChannel.name,
-                            backgroundColor: channelColor
-                        )
-                        .frame(width: 40, height: 40)
-                        .cornerRadius(6)
-                        
-                        if groupedChannel.hasMultipleDistricts {
-                            HStack(spacing: 4) {
-                                Text("\(groupedChannel.districts.count) districts")
-                                    .font(.system(size: 10, weight: .medium))
-                                    .foregroundColor(channelColor)
-                                
-                                Image(systemName: "chevron.down")
-                                    .font(.system(size: 8, weight: .bold))
-                                    .foregroundColor(channelColor)
-                            }
-                        } else if let district = primaryChannel.district {
-                            Text(district)
-                                .font(.system(size: 10, weight: .medium))
-                                .foregroundColor(channelColor)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.8)
-                        }
-                    }
-                    
+                // Content overlay
+                VStack(alignment: .leading, spacing: 4) {
                     Spacer()
+                    
+                    HStack {
+                        // Channel name and district indicator
+                        HStack(alignment: .bottom, spacing: 2) {
+                            // Channel title in square view with KnockoutTextView
+                            KnockoutTextView(
+                                text: groupedChannel.name,
+                                backgroundColor: channelColor
+                            )
+                            .frame(width: min(50, cardWidth * 0.3), height: min(50, cardHeight * 0.5))
+                            .cornerRadius(6)
+                            
+                            if groupedChannel.hasMultipleDistricts {
+                                HStack(spacing: 4) {
+                                    Text("\(groupedChannel.districts.count) districts")
+                                        .font(.system(size: 12, weight: .medium))
+                                        .foregroundColor(channelColor)
+                                        .lineLimit(1)
+                                        .minimumScaleFactor(0.8)
+                                    
+                                    Image(systemName: "chevron.down")
+                                        .font(.system(size: 10, weight: .bold))
+                                        .foregroundColor(channelColor)
+                                }
+                            } else if let district = primaryChannel.district {
+                                Text(district)
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundColor(channelColor)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.8)
+                            }
+                        }
+                        
+                        Spacer()
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.bottom, 8)
                 }
-                .padding(.horizontal, 8)
-                .padding(.bottom, 8)
             }
         }
-        .frame(width: 140, height: 80)
+        .frame(width: cardWidth, height: cardHeight)
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .shadow(color: .black.opacity(0.3), radius: 8, x: 0, y: 4)
-        .onTapGesture {
-            if groupedChannel.hasMultipleDistricts {
-                showingDistrictSheet = true
-            } else {
-                onTap(primaryChannel)
-            }
-        }
+        .buttonStyle(PlainButtonStyle())
+        .contentShape(Rectangle()) // Ensure the entire card area is tappable
         .sheet(isPresented: $showingDistrictSheet) {
             DistrictSelectionSheet(
                 groupedChannel: groupedChannel,
