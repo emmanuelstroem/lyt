@@ -39,33 +39,34 @@ struct PlayerActionsView: View {
                         onQuoteTap?()
                     }) {
                         Image(systemName: "quote.bubble")
-                            .font(.system(size: min(geometry.size.width, geometry.size.height) * 0.06, weight: .medium))
+                            .font(.system(size: min(geometry.size.width, geometry.size.height) * 0.3, weight: .medium))
                             .foregroundColor(.gray)
                     }
                 }
+                Spacer()
                 
                 if showAirPlayButton {
                     Button(action: {
                         onAirPlayTap?()
                     }) {
                         Image(systemName: "airplay.audio")
-                            .font(.system(size: min(geometry.size.width, geometry.size.height) * 0.06, weight: .medium))
+                            .font(.system(size: min(geometry.size.width, geometry.size.height) * 0.3, weight: .medium))
                             .foregroundColor(.gray)
                     }
                 }
-                
+                Spacer()
                 if showListButton {
                     Button(action: {
                         onListTap?()
                     }) {
                         Image(systemName: "list.bullet")
-                            .font(.system(size: min(geometry.size.width, geometry.size.height) * 0.06, weight: .medium))
+                            .font(.system(size: min(geometry.size.width, geometry.size.height) * 0.3, weight: .medium))
                             .foregroundColor(.gray)
                     }
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .padding(.horizontal, geometry.size.width * 0.05)
+            .padding(.horizontal, geometry.size.width * 0.2)
         }
     }
 }

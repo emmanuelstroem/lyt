@@ -136,6 +136,8 @@ struct FullPlayerSheet: View {
                                 .frame(height: 20) // Fixed height for the progress view
                             }
                             .padding(.horizontal, 20)
+
+                            Spacer()
                             
                             // Controls Component
                             PlayerControlsView(
@@ -152,14 +154,16 @@ struct FullPlayerSheet: View {
                                     serviceManager.audioPlayer.skipForward()
                                 }
                             )
+
+                            Spacer()
                             
-                            // Volume Component
-                            PlayerVolumeView(
-                                volume: $volume
-                            ) { newVolume in
-                                // Handle volume change
-                                print("Volume changed to: \(newVolume)")
-                            }
+                            // // Volume Component
+                            // PlayerVolumeView(
+                            //     volume: $volume
+                            // ) { newVolume in
+                            //     // Handle volume change
+                            //     print("Volume changed to: \(newVolume)")
+                            // }
                             
                             // Actions Component
                             PlayerActionsView(
