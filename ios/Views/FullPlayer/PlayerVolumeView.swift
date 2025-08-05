@@ -31,6 +31,7 @@ struct PlayerVolumeView: View {
                     .padding(.horizontal, geometry.size.width * 0.05)
                     .scaleEffect(isDragging ? 1.03 : 1)
                     .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isDragging)
+                    .opacity(isDragging ? 0.8 : 0.6)
             }
         }
     }
@@ -57,7 +58,6 @@ struct CapsuleSlider: View {
                 Image(systemName: "speaker.fill")
                     .font(.system(size: min(geometry.size.width, geometry.size.height), weight: .medium))
                     .foregroundColor(.white)
-                    .opacity(isDragging ? 0.8 : 0.6)
                     .animation(.easeInOut(duration: 0.2), value: isDragging)
                 
                 // Slider
@@ -92,7 +92,6 @@ struct CapsuleSlider: View {
                 Image(systemName: "speaker.wave.3.fill")
                     .font(.system(size: min(geometry.size.width, geometry.size.height), weight: .medium))
                     .foregroundColor(.white)
-                    .opacity(isDragging ? 0.8 : 0.6)
                     .animation(.easeInOut(duration: 0.2), value: isDragging)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)

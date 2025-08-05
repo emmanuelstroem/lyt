@@ -28,13 +28,13 @@ struct PlayerInfoView: View {
                 HStack {
                     VStack(alignment: .leading, spacing: geometry.size.height * 0.03) {
                         Text(title)
-                            .font(.system(size: min(geometry.size.width, geometry.size.height) * 0.5, weight: .medium))
+                            .font(.system(size: min(geometry.size.width, geometry.size.height) * 0.3, weight: .medium))
                             .foregroundColor(.white)
                             .lineLimit(1)
                         
                         MarqueeText(
                             text: subtitle,
-                            font: .system(size: min(geometry.size.width, geometry.size.height) * 0.5),
+                            font: .system(size: min(geometry.size.width, geometry.size.height) * 0.3),
                             leftFade: geometry.size.width * 0.05,
                             rightFade: geometry.size.width * 0.05,
                             startDelay: 1.5
