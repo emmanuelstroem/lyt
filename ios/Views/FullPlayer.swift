@@ -171,7 +171,7 @@ struct FullPlayerSheet: View {
                                     print("Quote tapped")
                                 },
                                 onAirPlayTap: {
-                                    print("AirPlay tapped")
+                                    // AirPlay functionality is handled by the native AirPlayButton
                                 },
                                 onListTap: {
                                     print("List tapped")

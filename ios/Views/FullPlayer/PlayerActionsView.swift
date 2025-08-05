@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AVKit
 
 struct PlayerActionsView: View {
     let showQuoteButton: Bool
@@ -46,13 +47,8 @@ struct PlayerActionsView: View {
                 Spacer()
                 
                 if showAirPlayButton {
-                    Button(action: {
-                        onAirPlayTap?()
-                    }) {
-                        Image(systemName: "airplay.audio")
-                            .font(.system(size: min(geometry.size.width, geometry.size.height) * 0.3, weight: .medium))
-                            .foregroundColor(.gray)
-                    }
+                    AirPlayButtonView(size: min(geometry.size.width, geometry.size.height) * 0.3)
+                        .foregroundColor(.gray)
                 }
                 Spacer()
                 if showListButton {
