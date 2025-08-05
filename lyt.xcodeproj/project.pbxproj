@@ -21,6 +21,13 @@
 			remoteGlobalIDString = 147B69F32E3250A20072E35A;
 			remoteInfo = lyt;
 		};
+		14A7A3602E41589B00C495BE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 147B69EC2E3250A20072E35A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 147B69F32E3250A20072E35A;
+			remoteInfo = lyt;
+		};
 		14BA0BC02E36B00A00D8C95E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 147B69EC2E3250A20072E35A /* Project object */;
@@ -62,13 +69,6 @@
 			proxyType = 1;
 			remoteGlobalIDString = 14BA0C332E36B0A500D8C95E;
 			remoteInfo = ipados;
-		};
-		14BA0C842E36BD9B00D8C95E /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 147B69EC2E3250A20072E35A /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 147B69F32E3250A20072E35A;
-			remoteInfo = lyt;
 		};
 		14BA0C862E36BDA000D8C95E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -538,7 +538,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				14BA0C852E36BD9B00D8C95E /* PBXTargetDependency */,
+				14A7A3612E41589B00C495BE /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				14BA0BDF2E36B02D00D8C95E /* ios */,
@@ -1081,6 +1081,11 @@
 			target = 147B69F32E3250A20072E35A /* lyt */;
 			targetProxy = 147B6A0C2E3250A40072E35A /* PBXContainerItemProxy */;
 		};
+		14A7A3612E41589B00C495BE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 147B69F32E3250A20072E35A /* lyt */;
+			targetProxy = 14A7A3602E41589B00C495BE /* PBXContainerItemProxy */;
+		};
 		14BA0BC12E36B00A00D8C95E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 14BA0BB12E36B00900D8C95E /* macos */;
@@ -1110,11 +1115,6 @@
 			isa = PBXTargetDependency;
 			target = 14BA0C332E36B0A500D8C95E /* ipados */;
 			targetProxy = 14BA0C4B2E36B0A600D8C95E /* PBXContainerItemProxy */;
-		};
-		14BA0C852E36BD9B00D8C95E /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 147B69F32E3250A20072E35A /* lyt */;
-			targetProxy = 14BA0C842E36BD9B00D8C95E /* PBXContainerItemProxy */;
 		};
 		14BA0C872E36BDA000D8C95E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -1164,6 +1164,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = A9Q5VPE9WX;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -1193,7 +1194,8 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				PRODUCT_NAME = Lyt;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_NAME)";
+				PRODUCT_NAME = lyt;
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "xrsimulator xros watchsimulator watchos macosx iphonesimulator iphoneos driverkit appletvsimulator appletvos";
 				SUPPORTS_MACCATALYST = YES;
@@ -1238,6 +1240,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = A9Q5VPE9WX;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -1261,7 +1264,8 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				PRODUCT_NAME = Lyt;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_NAME)";
+				PRODUCT_NAME = lyt;
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "xrsimulator xros watchsimulator watchos macosx iphonesimulator iphoneos driverkit appletvsimulator appletvos";
 				SUPPORTS_MACCATALYST = YES;
@@ -1619,6 +1623,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_SKIP_APP_STORE_DEPLOYMENT = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = A9Q5VPE9WX;

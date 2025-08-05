@@ -57,7 +57,6 @@ struct MiniPlayerComponents: View {
                             size: 36
                         )
                         .environmentObject(serviceManager)
-                        .clipShape(Capsule())
                     } else if let lastPlayedChannel = serviceManager.userPreferences.lastPlayedChannel,
                               serviceManager.findLastPlayedChannel(in: serviceManager.availableChannels) != nil {
                         ChannelArtworkView(
@@ -65,10 +64,9 @@ struct MiniPlayerComponents: View {
                             size: 36
                         )
                         .environmentObject(serviceManager)
-                        .clipShape(Capsule())
                         .opacity(0.7)
                     } else {
-                        Capsule()
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
                             .fill(
                                 LinearGradient(
                                     colors: [.gray.opacity(0.6), .gray.opacity(0.4)],
@@ -82,6 +80,11 @@ struct MiniPlayerComponents: View {
                                     .font(.system(size: 16, weight: .medium))
                                     .foregroundColor(.white)
                             }
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                    .stroke(Color.white.opacity(0.18), lineWidth: 1.2)
+                            )
+                            .shadow(color: Color.black.opacity(0.15), radius: 4, y: 2)
                     }
                 }
                 // Channel Info
@@ -96,10 +99,14 @@ struct MiniPlayerComponents: View {
                                             .font(.system(size: 13, weight: .medium))
                                             .foregroundColor(.white)
                                             .lineLimit(1)
-                                        Text(track.displayText)
-                                            .font(.system(size: 11, weight: .regular))
-                                            .foregroundColor(.gray)
-                                            .lineLimit(1)
+                                        MarqueeText(
+                                            text: track.displayText,
+                                            font: .system(size: 11, weight: .regular),
+                                            leftFade: 5,
+                                            rightFade: 24,
+                                            startDelay: 1.5
+                                        )
+                                        .foregroundColor(.gray)
                                     }
                                 } else {
                                     let programTitle = serviceManager.getCurrentProgram(for: playingChannel)?.cleanTitle() ?? "Live"
@@ -108,10 +115,14 @@ struct MiniPlayerComponents: View {
                                             .font(.system(size: 13, weight: .medium))
                                             .foregroundColor(.white)
                                             .lineLimit(1)
-                                        Text(programTitle)
-                                            .font(.system(size: 11, weight: .regular))
-                                            .foregroundColor(.gray)
-                                            .lineLimit(1)
+                                        MarqueeText(
+                                            text: programTitle,
+                                            font: .system(size: 11, weight: .regular),
+                                            leftFade: 5,
+                                            rightFade: 24,
+                                            startDelay: 1.5
+                                        )
+                                        .foregroundColor(.gray)
                                     }
                                 }
                             } else if let currentProgram = serviceManager.getCurrentProgram(for: playingChannel) {
@@ -119,10 +130,14 @@ struct MiniPlayerComponents: View {
                                     .font(.system(size: 13, weight: .medium))
                                     .foregroundColor(.white)
                                     .lineLimit(1)
-                                Text(currentProgram.cleanTitle())
-                                    .font(.system(size: 11, weight: .regular))
-                                    .foregroundColor(.gray)
-                                    .lineLimit(1)
+                                MarqueeText(
+                                    text: currentProgram.cleanTitle(),
+                                    font: .system(size: 11, weight: .regular),
+                                    leftFade: 5,
+                                    rightFade: 24,
+                                    startDelay: 1.5
+                                )
+                                .foregroundColor(.gray)
                             } else {
                                 Text(serviceManager.isPlaying ? "Live Now" : "Paused")
                                     .font(.system(size: 13, weight: .medium))
@@ -138,10 +153,14 @@ struct MiniPlayerComponents: View {
                                         .font(.system(size: 13, weight: .medium))
                                         .foregroundColor(.white)
                                         .lineLimit(1)
-                                    Text(programTitle)
-                                        .font(.system(size: 11, weight: .regular))
-                                        .foregroundColor(.gray)
-                                        .lineLimit(1)
+                                    MarqueeText(
+                                        text: programTitle,
+                                        font: .system(size: 11, weight: .regular),
+                                        leftFade: 5,
+                                        rightFade: 24,
+                                        startDelay: 1.5
+                                    )
+                                    .foregroundColor(.gray)
                                 }
                             } else {
                                 Text("Not Playing")
@@ -160,8 +179,6 @@ struct MiniPlayerComponents: View {
             }
             .contentShape(Rectangle())
             .onTapGesture { showingFullPlayer = true }
-
-            // Removed Spacer(minLength: 16)
 
             // Right: Controls
             HStack(spacing: 12) {
@@ -280,7 +297,6 @@ struct LiquidGlassMiniPlayer: View {
 }
 
 // MARK: - Shared Channel Artwork View
-// MARK: - Shared Channel Artwork View
 struct ChannelArtworkView: View {
     let playingChannel: DRChannel
     @EnvironmentObject var serviceManager: DRServiceManager
@@ -305,7 +321,7 @@ struct ChannelArtworkView: View {
                     .resizable()
                     .aspectRatio(contentMode: .fill)
             } placeholder: {
-                Capsule()
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(
                         LinearGradient(
                             colors: [.purple.opacity(0.8), .blue.opacity(0.6)],
@@ -320,9 +336,14 @@ struct ChannelArtworkView: View {
                     }
             }
             .frame(width: size, height: size)
-            .clipShape(Capsule())
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .stroke(Color.white.opacity(0.18), lineWidth: 1.2)
+            )
+            .shadow(color: Color.black.opacity(0.15), radius: 4, y: 2)
         } else {
-            Capsule()
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .fill(
                     LinearGradient(
                         colors: [.purple.opacity(0.8), .blue.opacity(0.6)],
@@ -336,6 +357,11 @@ struct ChannelArtworkView: View {
                         .font(.system(size: size * 0.4, weight: .medium))
                         .foregroundColor(.white)
                 }
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .stroke(Color.white.opacity(0.18), lineWidth: 1.2)
+                )
+                .shadow(color: Color.black.opacity(0.15), radius: 4, y: 2)
         }
     }
 }
