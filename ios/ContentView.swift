@@ -56,12 +56,10 @@ struct ContentView: View {
                 .accentColor(.purple)
                 
                 // MiniPlayer positioned above TabView
-                VStack {
-                    Spacer()
-                    MiniPlayer()
-                        .environmentObject(serviceManager)
-                        .environmentObject(selectionState)
-                }
+                MiniPlayer()
+                    .environmentObject(serviceManager)
+                    .environmentObject(selectionState)
+                    .frame(alignment: .bottom)
             }
         }
     }

@@ -47,147 +47,137 @@ struct MiniPlayerComponents: View {
     
     var body: some View {
         HStack(spacing: 12) {
-            // Artwork Component
-            if config.showArtwork {
-                if let playingChannel = playingChannel {
-                    ChannelArtworkView(
-                        playingChannel: playingChannel,
-                        size: 36
-                    )
-                    .environmentObject(serviceManager)
-                    .clipShape(Capsule())
-                } else if let lastPlayedChannel = serviceManager.userPreferences.lastPlayedChannel,
-                          serviceManager.findLastPlayedChannel(in: serviceManager.availableChannels) != nil {
-                    // Show last played channel artwork
-                    ChannelArtworkView(
-                        playingChannel: lastPlayedChannel,
-                        size: 36
-                    )
-                    .environmentObject(serviceManager)
-                    .clipShape(Capsule())
-                    .opacity(0.7) // Slightly dimmed to indicate not currently playing
-                } else {
-                    // Placeholder artwork for "Not Playing" state
-                    Capsule()
-                        .fill(
-                            LinearGradient(
-                                colors: [.gray.opacity(0.6), .gray.opacity(0.4)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: 36, height: 36)
-                        .overlay {
-                            Image(systemName: "music.note")
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundColor(.white)
-                        }
-                }
-            }
-            
-            // Channel Info Component
-            if config.showChannelInfo {
-                VStack(alignment: .leading, spacing: 1) {
+            // Left: Artwork & Info (tappable for full player)
+            HStack(spacing: 12) {
+                // Artwork
+                if config.showArtwork {
                     if let playingChannel = playingChannel {
-                        if let track = serviceManager.currentTrack {
-                            if track.isCurrentlyPlaying {
-                                // Show channel-program as heading and track as subheading
-                                let programTitle = serviceManager.getCurrentProgram(for: playingChannel)
-                                VStack(alignment: .leading, spacing: 1) {
-                                    Text("\(playingChannel.title) - \(programTitle?.cleanTitle() ?? "")")
-                                        .font(.system(size: 13, weight: .medium))
-                                        .foregroundColor(.white)
-                                        .lineLimit(1)
-                                    
-                                    Text(track.displayText)
-                                        .font(.system(size: 11, weight: .regular))
-                                        .foregroundColor(.gray)
-                                        .lineLimit(1)
+                        ChannelArtworkView(
+                            playingChannel: playingChannel,
+                            size: 36
+                        )
+                        .environmentObject(serviceManager)
+                        .clipShape(Capsule())
+                    } else if let lastPlayedChannel = serviceManager.userPreferences.lastPlayedChannel,
+                              serviceManager.findLastPlayedChannel(in: serviceManager.availableChannels) != nil {
+                        ChannelArtworkView(
+                            playingChannel: lastPlayedChannel,
+                            size: 36
+                        )
+                        .environmentObject(serviceManager)
+                        .clipShape(Capsule())
+                        .opacity(0.7)
+                    } else {
+                        Capsule()
+                            .fill(
+                                LinearGradient(
+                                    colors: [.gray.opacity(0.6), .gray.opacity(0.4)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: 36, height: 36)
+                            .overlay {
+                                Image(systemName: "music.note")
+                                    .font(.system(size: 16, weight: .medium))
+                                    .foregroundColor(.white)
+                            }
+                    }
+                }
+                // Channel Info
+                if config.showChannelInfo {
+                    VStack(alignment: .leading, spacing: 1) {
+                        if let playingChannel = playingChannel {
+                            if let track = serviceManager.currentTrack {
+                                if track.isCurrentlyPlaying {
+                                    let programTitle = serviceManager.getCurrentProgram(for: playingChannel)
+                                    VStack(alignment: .leading, spacing: 1) {
+                                        Text("\(playingChannel.title) - \(programTitle?.cleanTitle() ?? "")")
+                                            .font(.system(size: 13, weight: .medium))
+                                            .foregroundColor(.white)
+                                            .lineLimit(1)
+                                        Text(track.displayText)
+                                            .font(.system(size: 11, weight: .regular))
+                                            .foregroundColor(.gray)
+                                            .lineLimit(1)
+                                    }
+                                } else {
+                                    let programTitle = serviceManager.getCurrentProgram(for: playingChannel)?.cleanTitle() ?? "Live"
+                                    VStack(alignment: .leading, spacing: 1) {
+                                        Text(playingChannel.title)
+                                            .font(.system(size: 13, weight: .medium))
+                                            .foregroundColor(.white)
+                                            .lineLimit(1)
+                                        Text(programTitle)
+                                            .font(.system(size: 11, weight: .regular))
+                                            .foregroundColor(.gray)
+                                            .lineLimit(1)
+                                    }
                                 }
+                            } else if let currentProgram = serviceManager.getCurrentProgram(for: playingChannel) {
+                                Text(playingChannel.title)
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundColor(.white)
+                                    .lineLimit(1)
+                                Text(currentProgram.cleanTitle())
+                                    .font(.system(size: 11, weight: .regular))
+                                    .foregroundColor(.gray)
+                                    .lineLimit(1)
                             } else {
-                                // Show channel as heading and program as subheading
-                                let programTitle = serviceManager.getCurrentProgram(for: playingChannel)?.cleanTitle() ?? "Live"
+                                Text(serviceManager.isPlaying ? "Live Now" : "Paused")
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundColor(serviceManager.isPlaying ? .red : .gray)
+                                    .lineLimit(1)
+                            }
+                        } else {
+                            if let lastPlayedChannel = serviceManager.userPreferences.lastPlayedChannel,
+                               serviceManager.findLastPlayedChannel(in: serviceManager.availableChannels) != nil {
+                                let programTitle = serviceManager.getCurrentProgram(for: lastPlayedChannel)?.cleanTitle() ?? "Live"
                                 VStack(alignment: .leading, spacing: 1) {
-                                    Text(playingChannel.title)
+                                    Text(lastPlayedChannel.title)
                                         .font(.system(size: 13, weight: .medium))
                                         .foregroundColor(.white)
                                         .lineLimit(1)
-                                    
                                     Text(programTitle)
                                         .font(.system(size: 11, weight: .regular))
                                         .foregroundColor(.gray)
                                         .lineLimit(1)
                                 }
-                            }
-                        } else if let currentProgram = serviceManager.getCurrentProgram(for: playingChannel) {
-                            Text(playingChannel.title)
-                                .font(.system(size: 13, weight: .medium))
-                                .foregroundColor(.white)
-                                .lineLimit(1)
-                            
-                            Text(currentProgram.cleanTitle())
-                                .font(.system(size: 11, weight: .regular))
-                                .foregroundColor(.gray)
-                                .lineLimit(1)
-                        } else {
-                            Text(serviceManager.isPlaying ? "Live Now" : "Paused")
-                                .font(.system(size: 13, weight: .medium))
-                                .foregroundColor(serviceManager.isPlaying ? .red : .gray)
-                                .lineLimit(1)
-                        }
-                    } else {
-                        // Show last played channel if available, otherwise "Not Playing" state
-                        if let lastPlayedChannel = serviceManager.userPreferences.lastPlayedChannel,
-                           serviceManager.findLastPlayedChannel(in: serviceManager.availableChannels) != nil {
-                            // Show last played channel info
-                            let programTitle = serviceManager.getCurrentProgram(for: lastPlayedChannel)?.cleanTitle() ?? "Live"
-                            VStack(alignment: .leading, spacing: 1) {
-                                Text(lastPlayedChannel.title)
+                            } else {
+                                Text("Not Playing")
                                     .font(.system(size: 13, weight: .medium))
                                     .foregroundColor(.white)
                                     .lineLimit(1)
-                                
-                                Text(programTitle)
+                                Text(serviceManager.availableChannels.isEmpty ? "No channels available" : "Tap play to start")
                                     .font(.system(size: 11, weight: .regular))
                                     .foregroundColor(.gray)
                                     .lineLimit(1)
                             }
-                        } else {
-                            // "Not Playing" state
-                            Text("Not Playing")
-                                .font(.system(size: 13, weight: .medium))
-                                .foregroundColor(.white)
-                                .lineLimit(1)
-                            
-                            Text(serviceManager.availableChannels.isEmpty ? "No channels available" : "Tap play to start")
-                                .font(.system(size: 11, weight: .regular))
-                                .foregroundColor(.gray)
-                                .lineLimit(1)
                         }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
-            
-            Spacer()
-            
-            // Controls Component
+            .contentShape(Rectangle())
+            .onTapGesture { showingFullPlayer = true }
+
+            // Removed Spacer(minLength: 16)
+
+            // Right: Controls
             HStack(spacing: 12) {
                 if config.showAirPlayButton {
                     AirPlayButtonView(size: 24)
                         .opacity(playingChannel != nil ? 1.0 : 0.3)
                         .disabled(playingChannel == nil)
                 }
-                
                 if config.showPlayPauseButton {
                     Button(action: {
                         if let playingChannel = playingChannel {
                             serviceManager.togglePlayback(for: playingChannel)
                         } else if let lastPlayedChannel = serviceManager.userPreferences.lastPlayedChannel,
                                   serviceManager.findLastPlayedChannel(in: serviceManager.availableChannels) != nil {
-                            // Resume the last played channel
                             serviceManager.playChannel(lastPlayedChannel)
                         } else if let firstChannel = serviceManager.availableChannels.first {
-                            // Play the first channel when nothing is currently playing
                             serviceManager.playChannel(firstChannel)
                         }
                     }) {
@@ -199,12 +189,11 @@ struct MiniPlayerComponents: View {
                     .disabled(playingChannel == nil && serviceManager.availableChannels.isEmpty)
                 }
             }
+            .frame(alignment: .trailing)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
-        .onTapGesture {
-            showingFullPlayer = true
-        }
+        .frame(maxWidth: .infinity)
         .sheet(isPresented: $showingFullPlayer) {
             FullPlayerSheet(serviceManager: serviceManager, selectionState: selectionState)
         }
@@ -222,7 +211,7 @@ struct MiniPlayer: View {
             LiquidGlassMiniPlayer()
                 .environmentObject(serviceManager)
                 .environmentObject(selectionState)
-
+            
         } else {
             GeometryReader { geometry in
                 VStack {
@@ -261,17 +250,17 @@ struct LiquidGlassMiniPlayer: View {
     var body: some View {
         switch placement {
             case .inline:
-                                    MiniPlayerComponents(
-                        playingChannel: serviceManager.playingChannel,
-                        config: MiniPlayerConfig(
-                            showAirPlayButton: false,
-                            showPlayPauseButton: true,
-                            showChannelInfo: true,
-                            showArtwork: true
-                        )
+                MiniPlayerComponents(
+                    playingChannel: serviceManager.playingChannel,
+                    config: MiniPlayerConfig(
+                        showAirPlayButton: false,
+                        showPlayPauseButton: true,
+                        showChannelInfo: true,
+                        showArtwork: true
                     )
-                    .environmentObject(serviceManager)
-                    .environmentObject(selectionState)
+                )
+                .environmentObject(serviceManager)
+                .environmentObject(selectionState)
                 .id(serviceManager.playingChannel?.id ?? "no-channel")
             default:
                 MiniPlayerComponents(
