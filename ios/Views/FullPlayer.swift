@@ -14,6 +14,7 @@ struct FullPlayerSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var currentTime: Double = 0
     @State private var totalTime: Double = 100
+    @State private var volume: Double = 0.7
     
     // Get the current playing channel from serviceManager
     private var currentChannel: DRChannel? {
@@ -43,6 +44,29 @@ struct FullPlayerSheet: View {
         return "antenna.radiowaves.left.and.right"
     }
     
+    private var infoTitle: String {
+        guard let currentChannel = currentChannel else { return "No Channel" }
+        
+        if let track = serviceManager.currentTrack, track.isCurrentlyPlaying {
+            let programTitle = serviceManager.getCurrentProgram(for: currentChannel)?.cleanTitle() ?? "Live"
+            return "\(currentChannel.title) - \(programTitle)"
+        } else {
+            return currentChannel.title
+        }
+    }
+    
+    private var infoSubtitle: String {
+        guard let currentChannel = currentChannel else { return "No program information" }
+        
+        if let track = serviceManager.currentTrack, track.isCurrentlyPlaying {
+            return track.displayText
+        } else if let currentProgram = serviceManager.getCurrentProgram(for: currentChannel) {
+            return currentProgram.cleanTitle()
+        } else {
+            return "Live"
+        }
+    }
+    
     var body: some View {
         NavigationView {
             ZStack {
@@ -59,212 +83,98 @@ struct FullPlayerSheet: View {
                 .ignoresSafeArea()
                 
                 if let currentChannel = currentChannel {
-                    VStack(spacing: 40) {
-                        // Channel Artwork
-                        VStack(spacing: 20) {
-                            if let currentProgram = serviceManager.getCurrentProgram(for: currentChannel),
-                               let imageURL = currentProgram.primaryImageURL,
-                               let url = URL(string: imageURL) {
-                                CachedAsyncImage(url: url) { image in
-                                    image
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fill)
-                                } placeholder: {
-                                    RoundedRectangle(cornerRadius: 20)
-                                        .fill(
-                                            LinearGradient(
-                                                colors: [
-                                                    channelColor.opacity(0.9),
-                                                    channelColor.opacity(0.7),
-                                                    channelColor.opacity(0.5)
-                                                ],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            )
-                                        )
-                                        .overlay {
-                                            VStack(spacing: 16) {
-                                                Image(systemName: channelIcon)
-                                                    .font(.system(size: 64, weight: .medium))
-                                                    .foregroundColor(.white)
-                                                
-                                                Text(currentChannel.title)
-                                                    .font(.title)
-                                                    .fontWeight(.bold)
-                                                    .foregroundColor(.white)
-                                                    .multilineTextAlignment(.center)
-                                            }
-                                        }
-                                }
-                                .frame(width: 280, height: 280)
-                                .clipShape(RoundedRectangle(cornerRadius: 20))
-                                .shadow(radius: 20)
-                            } else {
-                                RoundedRectangle(cornerRadius: 20)
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [
-                                                channelColor.opacity(0.9),
-                                                channelColor.opacity(0.7),
-                                                channelColor.opacity(0.5)
-                                            ],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
-                                    .frame(width: 280, height: 280)
-                                    .overlay {
-                                        VStack(spacing: 16) {
-                                            Image(systemName: channelIcon)
-                                                .font(.system(size: 64, weight: .medium))
-                                                .foregroundColor(.white)
-                                            
-                                            Text(currentChannel.title)
-                                                .font(.title)
-                                                .fontWeight(.bold)
-                                                .foregroundColor(.white)
-                                                .multilineTextAlignment(.center)
-                                        }
-                                    }
-                                    .shadow(radius: 20)
-                            }
+                    VStack(spacing: 0) {
+                        // Top VStack - Artwork Component
+                        VStack {
+                            PlayerArtworkView(
+                                channel: currentChannel,
+                                currentProgram: serviceManager.getCurrentProgram(for: currentChannel),
+                                channelColor: channelColor,
+                                channelIcon: channelIcon
+                            )
                         }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                         
-                        // Channel Info
-                        VStack(spacing: 12) {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    if let track = serviceManager.currentTrack {
-                                        if track.isCurrentlyPlaying {
-                                            // Show channel-program as heading and track as subheading
-                                            let programTitle = serviceManager.getCurrentProgram(for: currentChannel)?.cleanTitle() ?? "Live"
-                                            VStack(alignment: .leading, spacing: 2) {
-                                                Text("\(currentChannel.title) - \(programTitle)")
-                                                    .font(.subheadline)
-                                                    .fontWeight(.medium)
-                                                    .foregroundColor(.white)
-                                                    .lineLimit(1)
-                                                
-                                                Text(track.displayText)
-                                                    .font(.caption)
-                                                    .foregroundColor(.gray)
-                                                    .lineLimit(1)
-                                            }
-                                        } else {
-                                            // Show channel as heading and program as subheading
-                                            let programTitle = serviceManager.getCurrentProgram(for: currentChannel)?.cleanTitle() ?? "Live"
-                                            VStack(alignment: .leading, spacing: 2) {
-                                                Text(currentChannel.title)
-                                                    .font(.subheadline)
-                                                    .fontWeight(.medium)
-                                                    .foregroundColor(.white)
-                                                    .lineLimit(1)
-                                                
-                                                Text(programTitle)
-                                                    .font(.caption)
-                                                    .foregroundColor(.gray)
-                                                    .lineLimit(1)
-                                            }
-                                        }
-                                    } else if let currentProgram = serviceManager.getCurrentProgram(for: currentChannel) {
-                                        Text(currentChannel.title)
-                                            .font(.title2)
-                                            .fontWeight(.bold)
-                                            .foregroundColor(.white)
-                                        
-                                        Text(currentProgram.cleanTitle())
-                                            .font(.subheadline)
-                                            .foregroundColor(.gray)
-                                            .lineLimit(1)
-                                    } else {
-                                        Text("DR Radio Channel")
-                                            .font(.subheadline)
-                                            .foregroundColor(.gray)
-                                    }
-                                }
-                                
-                                Spacer()
-                                
-                                // Live indicator
-                                HStack(spacing: 8) {
-                                    Circle()
-                                        .fill(Color.red)
-                                        .frame(width: 8, height: 8)
-                                    
-                                    Text("LIVE")
-                                        .font(.caption)
-                                        .fontWeight(.bold)
-                                        .foregroundColor(.red)
-                                }
-                            }
-                        }
-                        .padding(.horizontal, 20)
-                        
-                        // Progress Bar (for live radio, this could show time since start)
-                        VStack(spacing: 8) {
-                            HStack {
-                                Text("Live")
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
-                                
-                                Spacer()
-                                
-                                Text("24/7")
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
+                        // Bottom VStack - All other components
+                        VStack(spacing: 30) {
+                            // Info Component
+                            PlayerInfoView(
+                                title: infoTitle,
+                                subtitle: infoSubtitle
+                            ) {
+                                // Ellipsis button action
+                                print("Show more options")
                             }
                             
-                            ProgressView(value: currentTime, total: totalTime)
-                                .progressViewStyle(LinearProgressViewStyle(tint: .purple))
-                                .scaleEffect(y: 2)
-                        }
-                        .padding(.horizontal, 20)
-                        
-                        // Main Controls
-                        VStack(spacing: 24) {
-                            // Play Controls with Skip Buttons
-                            HStack(spacing: 40) {
-                                // Skip back button
-                                Button(action: {
-                                    // Skip back 30 seconds (go to live for live radio)
-                                    serviceManager.audioPlayer.skipBackward(by: 30)
-                                }) {
-                                    Image(systemName: "gobackward.30")
-                                        .font(.system(size: 24, weight: .medium))
-                                        .foregroundColor(.gray)
+                            // Progress Bar with centered LIVE text and transparency fade
+                            VStack(spacing: 8) {
+                                GeometryReader { geometry in
+                                    ZStack {
+                                        ProgressView(value: currentTime, total: totalTime)
+                                            .progressViewStyle(LinearProgressViewStyle(tint: .purple))
+                                            .scaleEffect(y: 2)
+                                            .mask(
+                                                RadialGradient(
+                                                    colors: [
+                                                        Color.black.opacity(0.0),
+                                                        Color.black.opacity(0.5),
+                                                        Color.black.opacity(1.0)
+                                                    ],
+                                                    center: .center,
+                                                    startRadius: 0,
+                                                    endRadius: geometry.size.width * 0.5 // 3/4 of half width
+                                                )
+                                            )
+                                        
+                                        Text("LIVE")
+                                            .font(.caption)
+                                            .fontWeight(.bold)
+                                            .foregroundColor(.white)
+                                            .opacity(0.8)
+                                    }
                                 }
-                                
-                                // Play/Pause Button
-                                Button(action: {
+                                .frame(height: 20) // Fixed height for the progress view
+                            }
+                            .padding(.horizontal, 20)
+                            
+                            // Controls Component
+                            PlayerControlsView(
+                                isPlaying: serviceManager.isPlaying,
+                                onBackwardTap: {
+                                    serviceManager.audioPlayer.skipBackward(by: 30)
+                                },
+                                onPlayPauseTap: {
                                     if let playingChannel = serviceManager.playingChannel {
                                         serviceManager.togglePlayback(for: playingChannel)
                                     }
-                                }) {
-                                    Image(systemName: serviceManager.isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                                        .font(.system(size: 80, weight: .medium))
-                                        .foregroundColor(.purple)
-                                }
-                                
-                                // Skip forward button
-                                Button(action: {
-                                    // Skip forward (go to live for live radio)
+                                },
+                                onForwardTap: {
                                     serviceManager.audioPlayer.skipForward()
-                                }) {
-                                    Image(systemName: "goforward.plus")
-                                        .font(.system(size: 24, weight: .medium))
-                                        .foregroundColor(.gray)
                                 }
+                            )
+                            
+                            // Volume Component
+                            PlayerVolumeView(
+                                volume: $volume
+                            ) { newVolume in
+                                // Handle volume change
+                                print("Volume changed to: \(newVolume)")
                             }
                             
-                            // Secondary Controls
-                            HStack(spacing: 24) {
-                                AirPlayButtonView(size: 48)
-                                    .frame(width: 48, height: 48)
-                            }
+                            // Actions Component
+                            PlayerActionsView(
+                                onQuoteTap: {
+                                    print("Quote tapped")
+                                },
+                                onAirPlayTap: {
+                                    print("AirPlay tapped")
+                                },
+                                onListTap: {
+                                    print("List tapped")
+                                }
+                            )
                         }
-                        .padding(.horizontal, 20)
-                        
-                        Spacer()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
                     .padding(.top, 40)
                 } else {
@@ -283,20 +193,12 @@ struct FullPlayerSheet: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden(true)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                    .foregroundColor(.purple)
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {}) {
-                        Image(systemName: "square.and.arrow.up")
-                            .foregroundColor(.purple)
-                    }
-                }
+            .overlay(alignment: .top) {
+                // Drag indicator
+                RoundedRectangle(cornerRadius: 2.5)
+                    .fill(Color.gray.opacity(0.6))
+                    .frame(width: 36, height: 5)
+                    .padding(.top, 8)
             }
         }
     }

@@ -21,13 +21,6 @@
 			remoteGlobalIDString = 147B69F32E3250A20072E35A;
 			remoteInfo = lyt;
 		};
-		14A7A3602E41589B00C495BE /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 147B69EC2E3250A20072E35A /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 147B69F32E3250A20072E35A;
-			remoteInfo = lyt;
-		};
 		14BA0BC02E36B00A00D8C95E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 147B69EC2E3250A20072E35A /* Project object */;
@@ -538,7 +531,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				14A7A3612E41589B00C495BE /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				14BA0BDF2E36B02D00D8C95E /* ios */,
@@ -1080,11 +1072,6 @@
 			isa = PBXTargetDependency;
 			target = 147B69F32E3250A20072E35A /* lyt */;
 			targetProxy = 147B6A0C2E3250A40072E35A /* PBXContainerItemProxy */;
-		};
-		14A7A3612E41589B00C495BE /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 147B69F32E3250A20072E35A /* lyt */;
-			targetProxy = 14A7A3602E41589B00C495BE /* PBXContainerItemProxy */;
 		};
 		14BA0BC12E36B00A00D8C95E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
