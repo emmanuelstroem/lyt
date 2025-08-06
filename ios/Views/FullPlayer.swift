@@ -111,7 +111,9 @@ struct FullPlayerSheet: View {
                             // Info Component
                             PlayerInfoView(
                                 title: infoTitle,
-                                subtitle: infoSubtitle
+                                subtitle: infoSubtitle,
+                                channel: currentChannel,
+                                serviceManager: serviceManager
                             ) {
                                 // Ellipsis button action
                                 print("Show more options")
