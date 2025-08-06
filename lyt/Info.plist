@@ -24,5 +24,16 @@
 	</array>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>This app does not use the microphone.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.eopio.lyt</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>lyt</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

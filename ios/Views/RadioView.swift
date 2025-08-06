@@ -10,6 +10,7 @@ import SwiftUI
 struct RadioView: View {
     @ObservedObject var serviceManager: DRServiceManager
     @ObservedObject var selectionState: SelectionState
+    @ObservedObject var deepLinkHandler: DeepLinkHandler
     @State private var searchText = ""
     @State private var isLoading = false
     
@@ -91,6 +92,23 @@ struct RadioView: View {
                 serviceManager.loadChannels()
             }
         }
+        .onChange(of: deepLinkHandler.shouldNavigateToChannel) { shouldNavigate in
+            if shouldNavigate, let targetChannel = deepLinkHandler.targetChannel {
+                handleDeepLinkChannel(targetChannel)
+            }
+        }
+    }
+    
+    private func handleDeepLinkChannel(_ targetChannel: DRChannel) {
+        // Find the actual channel in available channels
+        if let actualChannel = serviceManager.availableChannels.first(where: { $0.id == targetChannel.id }) {
+            // Play the channel
+            serviceManager.playChannel(actualChannel)
+            selectionState.selectChannel(actualChannel, showSheet: false)
+        }
+        
+        // Clear the deep link target
+        deepLinkHandler.clearTarget()
     }
 }
 
@@ -263,7 +281,8 @@ struct GroupedRadioChannelCard: View {
 #Preview {
     RadioView(
         serviceManager: DRServiceManager(),
-        selectionState: SelectionState()
+        selectionState: SelectionState(),
+        deepLinkHandler: DeepLinkHandler()
     )
 }
 

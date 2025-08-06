@@ -11,6 +11,7 @@ struct ContentView: View {
     @StateObject private var serviceManager = DRServiceManager()
     @StateObject private var selectionState = SelectionState()
     @SceneStorage("selectedTab") private var selectedTabIndex = 0
+    @EnvironmentObject var deepLinkHandler: DeepLinkHandler
     
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -18,16 +19,16 @@ struct ContentView: View {
             if #available(iOS 26.0, *) {
                 TabView(selection: $selectedTabIndex) {
                     Tab("Home", systemImage: "house", value: 0) {
-                        HomeView(serviceManager: serviceManager, selectionState: selectionState)
+                        HomeView(serviceManager: serviceManager, selectionState: selectionState, deepLinkHandler: deepLinkHandler)
                         // List(0...100, id: \.self) { id in
                         //     Text(id.description)
                         // }
                     }
                     Tab("Radio", systemImage: "antenna.radiowaves.left.and.right", value: 2) {
-                        RadioView(serviceManager: serviceManager, selectionState: selectionState)
+                        RadioView(serviceManager: serviceManager, selectionState: selectionState, deepLinkHandler: deepLinkHandler)
                     }
                     Tab("Search", systemImage: "magnifyingglass", value: 1, role: .search) {
-                        SearchView(serviceManager: serviceManager, selectionState: selectionState)
+                        SearchView(serviceManager: serviceManager, selectionState: selectionState, deepLinkHandler: deepLinkHandler)
                     }
                 }
                 .tabBarMinimizeBehavior(.onScrollDown)
@@ -40,18 +41,18 @@ struct ContentView: View {
             } else {
                 // Fallback on earlier versions
                 TabView {
-                    // Home Tab
-                    HomeView(serviceManager: serviceManager, selectionState: selectionState)
-                        .tabItem {
-                            Image(systemName: "house")
-                            Text("Home")
-                        }
-                    
-                    SearchView(serviceManager: serviceManager, selectionState: selectionState)
-                        .tabItem {
-                            Image(systemName: "magnifyingglass")
-                            Text("Search")
-                        }
+                                    // Home Tab
+                HomeView(serviceManager: serviceManager, selectionState: selectionState, deepLinkHandler: deepLinkHandler)
+                    .tabItem {
+                        Image(systemName: "house")
+                        Text("Home")
+                    }
+                
+                SearchView(serviceManager: serviceManager, selectionState: selectionState, deepLinkHandler: deepLinkHandler)
+                    .tabItem {
+                        Image(systemName: "magnifyingglass")
+                        Text("Search")
+                    }
                 }
                 .accentColor(.purple)
                 

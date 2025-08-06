@@ -15,7 +15,6 @@ struct PlayerInfoView: View {
     let onEllipsisTap: (() -> Void)?
     
     @State private var showingMenu = false
-    @State private var showingShareSheet = false
     @State private var shareImage: UIImage?
     
     init(
@@ -34,9 +33,7 @@ struct PlayerInfoView: View {
     
     private var deepLinkURL: URL? {
         guard let channel = channel else { return nil }
-        // Create a deep link to the channel in the app
-        let urlString = "lyt://channel/\(channel.id)"
-        return URL(string: urlString)
+        return DeepLinkHandler.generateDeepLinkURL(for: channel)
     }
     
     private var currentProgram: DREpisode? {
@@ -68,9 +65,12 @@ struct PlayerInfoView: View {
         if !channelDisplayName.isEmpty {
             text += "\n📡 \(channelDisplayName)"
         }
-        if channel != nil {
-            text += "\n\nListen on Lyt - DR Radio"
+        
+        // Add deep link
+        if let channel = channel {
+            text += "\n🔗 \(DeepLinkHandler.generateDeepLinkString(for: channel))"
         }
+        
         return text
     }
     
@@ -99,21 +99,17 @@ struct PlayerInfoView: View {
                     Spacer()
                     
                     Menu {
-                        if #available(iOS 26.0, *) {
-                            Button {
-                                loadShareImage()
-                                showingShareSheet = true
-                            } label: {
-                                Label("Share", systemImage: "square.and.arrow.up")
-                            }
-                        } else {
-                            // Fallback on earlier versions
-                            Button(action: {
-                                loadShareImage()
-                                showingShareSheet = true
-                            }) {
-                                Label("Share", systemImage: "square.and.arrow.up")
-                            }
+                        ShareLink(
+                            item: shareText,
+                            preview: SharePreview(
+                                title,
+                                image: shareImage != nil ? Image(uiImage: shareImage!) : Image(systemName: "music.note")
+                            )
+                        ) {
+                            Label("Share", systemImage: "square.and.arrow.up")
+                        }
+                        .onAppear {
+                            loadShareImage()
                         }
                         
                         // Button(action: {
@@ -157,14 +153,6 @@ struct PlayerInfoView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .padding(.horizontal, geometry.size.width * 0.05)
         }
-        .sheet(isPresented: $showingShareSheet) {
-            ShareSheet(
-                activityItems: [shareText],
-                deepLinkURL: deepLinkURL,
-                shareImage: shareImage
-            )
-            .presentationDetents([.medium])
-        }
         .onAppear {
             loadShareImage()
         }
@@ -181,45 +169,6 @@ struct PlayerInfoView: View {
             }
         }.resume()
     }
-}
-
-// MARK: - Share Sheet
-struct ShareSheet: UIViewControllerRepresentable {
-    let activityItems: [Any]
-    let deepLinkURL: URL?
-    let shareImage: UIImage?
-    
-    init(activityItems: [Any], deepLinkURL: URL? = nil, shareImage: UIImage? = nil) {
-        var items = activityItems
-        if let shareImage = shareImage {
-            items.append(shareImage)
-        }
-        if let deepLinkURL = deepLinkURL {
-            items.append(deepLinkURL)
-        }
-        self.activityItems = items
-        self.deepLinkURL = deepLinkURL
-        self.shareImage = shareImage
-    }
-    
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        let controller = UIActivityViewController(
-            activityItems: activityItems,
-            applicationActivities: nil
-        )
-        
-        // Exclude some activity types that don't make sense for deep links
-        controller.excludedActivityTypes = [
-            .assignToContact,
-            .addToReadingList,
-            .openInIBooks,
-            .markupAsPDF
-        ]
-        
-        return controller
-    }
-    
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 #Preview {

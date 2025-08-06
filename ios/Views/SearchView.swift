@@ -11,6 +11,7 @@ import SwiftUI
 struct SearchView: View {
     @ObservedObject var serviceManager: DRServiceManager
     @ObservedObject var selectionState: SelectionState
+    @ObservedObject var deepLinkHandler: DeepLinkHandler
     
     var body: some View {
         ZStack {
@@ -40,5 +41,22 @@ struct SearchView: View {
             }
             .padding(.top, 60)
         }
+        .onChange(of: deepLinkHandler.shouldNavigateToChannel) { shouldNavigate in
+            if shouldNavigate, let targetChannel = deepLinkHandler.targetChannel {
+                handleDeepLinkChannel(targetChannel)
+            }
+        }
+    }
+    
+    private func handleDeepLinkChannel(_ targetChannel: DRChannel) {
+        // Find the actual channel in available channels
+        if let actualChannel = serviceManager.availableChannels.first(where: { $0.id == targetChannel.id }) {
+            // Play the channel
+            serviceManager.playChannel(actualChannel)
+            selectionState.selectChannel(actualChannel, showSheet: false)
+        }
+        
+        // Clear the deep link target
+        deepLinkHandler.clearTarget()
     }
 } 
