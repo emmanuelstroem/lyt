@@ -7,7 +7,6 @@
 
 import SwiftUI
 import AVKit
-
 // MARK: - SwiftUI Native AirPlay Button
 
 struct AirPlayButton: UIViewRepresentable {
@@ -33,11 +32,11 @@ struct AirPlayButton: UIViewRepresentable {
         view.translatesAutoresizingMaskIntoConstraints = false
         view.isUserInteractionEnabled = true
         
-        // Set minimum size for touch interaction
+        // Set minimum size for touch interaction and center the content
         let buttonSize = max(size, 44)
         view.frame = CGRect(x: 0, y: 0, width: buttonSize, height: buttonSize)
-        
-        
+
+        view.contentMode = .center
         
         return view
     }
@@ -47,9 +46,10 @@ struct AirPlayButton: UIViewRepresentable {
         uiView.activeTintColor = UIColor.systemBlue
         uiView.tintColor = UIColor.label
         
-        // Ensure proper frame
+        // Ensure proper frame and centering
         let buttonSize = max(size, 44)
         uiView.frame = CGRect(x: 0, y: 0, width: buttonSize, height: buttonSize)
+        uiView.contentMode = .center
     }
     
     // MARK: - Coordinator
@@ -149,7 +149,8 @@ struct AirPlayButtonView: View {
     
     var body: some View {
         AirPlayButton(size: size)
-            .frame(width: size, height: size)
+            .frame(width: size, height: size, alignment: .center)
+            .clipped() // Ensure the content stays within bounds
             .contentShape(Rectangle()) // Ensure the entire frame is tappable
             .accessibilityLabel("AirPlay")
     }

@@ -39,7 +39,7 @@ struct PlayerActionsView: View {
                     Button(action: {
                         onQuoteTap?()
                     }) {
-                        Image(systemName: "quote.bubble")
+                        Image(systemName: "info.circle")
                             .font(.system(size: min(geometry.size.width, geometry.size.height) * 0.3, weight: .medium))
                             .foregroundColor(.gray)
                     }
@@ -47,7 +47,8 @@ struct PlayerActionsView: View {
                 Spacer()
                 
                 if showAirPlayButton {
-                    AirPlayButtonView(size: min(geometry.size.width, geometry.size.height) * 0.3)
+                    // Increase the size slightly to compensate for the AirPlay button's internal sizing
+                    AirPlayButtonView(size: 24)
                         .foregroundColor(.gray)
                 }
                 Spacer()
@@ -69,7 +70,7 @@ struct PlayerActionsView: View {
 
 #Preview {
     PlayerActionsView(
-        onQuoteTap: { print("Quote tapped") },
+        onQuoteTap: { print("Info tapped") },
         onAirPlayTap: { print("AirPlay tapped") },
         onListTap: { print("List tapped") }
     )

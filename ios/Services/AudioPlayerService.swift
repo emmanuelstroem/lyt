@@ -150,7 +150,7 @@ class AudioPlayerService: NSObject, ObservableObject {
         // Reactivate audio session
         do {
             let audioSession = AVAudioSession.sharedInstance()
-            try audioSession.setCategory(.playback, mode: .default)
+            try audioSession.setCategory(.playback, mode: .default, policy: .longFormAudio)
             try audioSession.setActive(true)
         } catch {
             print("Failed to reactivate audio session after interruption: \(error)")

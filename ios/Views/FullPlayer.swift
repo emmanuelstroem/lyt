@@ -15,6 +15,7 @@ struct FullPlayerSheet: View {
     @State private var currentTime: Double = 0
     @State private var totalTime: Double = 100
     @State private var volume: Double = 0.7
+    @State private var showingDescriptionSheet: Bool = false // New state for description sheet
     
     // Get the current playing channel from serviceManager
     private var currentChannel: DRChannel? {
@@ -64,6 +65,16 @@ struct FullPlayerSheet: View {
             return currentProgram.cleanTitle()
         } else {
             return "Live"
+        }
+    }
+    
+    private var programDescription: String {
+        guard let currentChannel = currentChannel else { return "No program information available" }
+        
+        if let currentProgram = serviceManager.getCurrentProgram(for: currentChannel) {
+            return currentProgram.description ?? "Live radio programming"
+        } else {
+            return "Live radio programming"
         }
     }
     
@@ -168,10 +179,10 @@ struct FullPlayerSheet: View {
                             // Actions Component
                             PlayerActionsView(
                                 onQuoteTap: {
-                                    print("Quote tapped")
+                                    showingDescriptionSheet = true
                                 },
                                 onAirPlayTap: {
-                                    // AirPlay functionality is handled by the native AirPlayButton
+                                    print("AirPlay tapped")
                                 },
                                 onListTap: {
                                     print("List tapped")
@@ -203,6 +214,86 @@ struct FullPlayerSheet: View {
                     .fill(Color.gray.opacity(0.6))
                     .frame(width: 36, height: 5)
                     .padding(.top, 8)
+            }
+            .sheet(isPresented: $showingDescriptionSheet) {
+                if let currentChannel = currentChannel {
+                    ProgramDescriptionSheet(
+                        channel: currentChannel,
+                        currentProgram: serviceManager.getCurrentProgram(for: currentChannel),
+                        programDescription: programDescription
+                    )
+                    .presentationDetents([.medium])
+                    
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Program Description Sheet
+struct ProgramDescriptionSheet: View {
+    let channel: DRChannel?
+    let currentProgram: DREpisode?
+    let programDescription: String
+    @Environment(\.dismiss) private var dismiss
+    
+    private var navigationTitle: String {
+        var title = channel?.title ?? "Unknown Channel"
+        if let currentProgram = currentProgram {
+            title += " - \(currentProgram.cleanTitle())"
+        }
+        return title
+    }
+    
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    // Description
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(programDescription)
+                            .font(.body)
+                            .foregroundColor(.secondary)
+                            .lineLimit(nil)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(.horizontal, 20)
+                    
+                    // Additional details
+                    if let currentProgram = currentProgram {
+                        VStack(alignment: .leading, spacing: 12) {
+                            VStack(alignment: .leading, spacing: 8) {
+                                let duration = currentProgram.duration
+                                HStack {
+                                    Image(systemName: "clock")
+                                        .foregroundColor(.secondary)
+                                    Text("\(Int(duration / 60)) min\(Int(duration / 60) > 1 ? "s" : "")")
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                if let category = currentProgram.categories?.first {
+                                    HStack {
+                                        Image(systemName: "tag")
+                                            .foregroundColor(.secondary)
+                                        Text(category)
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                    }
+                }
+                .padding(.vertical, 20)
+            }
+            .navigationTitle(navigationTitle)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
             }
         }
     }
